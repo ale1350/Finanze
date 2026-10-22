@@ -6,10 +6,11 @@
 <title>Finanze</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finanze">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#091D29">
 <meta name="robots" content="noindex">
+<style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
@@ -17,18 +18,18 @@
 <style>
 /* Layout: una colonna minimal (max 560px). Mese: anello pagamenti + vincolo + spese varie,
    lista pagamenti a righe, barra "Da spostare" fissa sopra la tab bar.
-   Tema unico nero: bianco per il testo, verde scuro = fatto, rosso scuro = problema. */
+   Tema unico blu ottanio scuro: bianco per il testo, verde scuro = fatto, rosso scuro = problema. */
 :root {
   color-scheme: dark;
-  --bg: #000000;
-  --surface: #0E0F11;
-  --surface-2: #17181B;
-  --ink: #F4F4F2;
-  --muted: #8E9197;
-  --dim: #6A6D73;
-  --line: #222326;
-  --line-strong: #4A4C52;
-  --track: #222326;
+  --bg: #091D29;
+  --surface: #0F2735;
+  --surface-2: #153243;
+  --ink: #F1F6F8;
+  --muted: #8BA3B1;
+  --dim: #637D8B;
+  --line: #193546;
+  --line-strong: #34576B;
+  --track: #193546;
   --ok: #2F8A57;
   --ok-ink: #FFFFFF;
   --bad: #D04A3B;
@@ -65,10 +66,11 @@ main { padding-bottom: calc(190px + env(safe-area-inset-bottom, 0px)); }
 main .wrap { display: grid; gap: 22px; padding-block: 8px 12px; }
 
 /* riepilogo con anello */
-.summary { display: flex; align-items: center; gap: 26px; }
-.ring { position: relative; width: 124px; height: 124px; flex: none; }
+.summary { display: flex; align-items: center; gap: 20px; }
+.ring { position: relative; width: 116px; height: 116px; flex: none; }
+.ring svg { width: 116px; height: 116px; }
 .ring svg { display: block; }
-.ring-arc { transition: stroke-dasharray .5s cubic-bezier(.2, .8, .2, 1); }
+.ring-arc { transition: stroke-dashoffset .7s cubic-bezier(.2, .8, .2, 1), opacity .2s; }
 .ring-in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 .ring-in .num { font-size: 27px; font-weight: 800; line-height: 1; }
 .ring-in small { font-size: 11px; font-weight: 600; color: var(--muted); }
@@ -76,14 +78,13 @@ main .wrap { display: grid; gap: 22px; padding-block: 8px 12px; }
 .kpis > div { display: grid; gap: 1px; }
 .kpis dt { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .kpis dd { margin: 0; }
-.kpis dd.num { font-size: 30px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
+.kpis dd.num { font-size: 28px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
 .kpis .kpi-sub { font-size: 12px; color: var(--dim); }
-.sv { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.sv > .num { font-size: 30px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
-.amex { border: 0; background: none; padding: 2px 0; color: #B9BCC2; display: inline-flex; align-items: baseline; gap: 3px; white-space: nowrap; }
-.amex .plus { font-family: var(--f-display); font-size: 18px; font-weight: 700; color: var(--dim); }
-.amex .num { font-size: 19px; font-weight: 800; }
-.amex small { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--dim); margin-left: 2px; }
+.sv { display: flex; flex-wrap: nowrap; align-items: flex-end; gap: 10px; min-width: 0; }
+.sv > .num { font-size: 28px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; white-space: nowrap; }
+.amex { border: 0; border-left: 2px solid var(--line-strong); background: none; padding: 0 0 2px 10px; color: #BDD1DB; display: grid; justify-items: start; gap: 0; white-space: nowrap; flex: none; }
+.amex small { font-size: 9.5px; font-weight: 800; letter-spacing: .1em; color: var(--dim); line-height: 1.2; }
+.amex .num { font-size: 17px; font-weight: 800; line-height: 1.15; }
 .amex.manual .num { text-decoration: underline; text-decoration-style: dotted; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .ced { border: 0; background: none; padding: 0; text-align: left; font-size: 13px; font-weight: 600; color: var(--muted); }
 .ced u { color: var(--ink); text-decoration-thickness: 2px; text-underline-offset: 3px; }
@@ -185,7 +186,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 .btn-block { width: 100%; }
 
 /* bottom sheet */
-.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .7); z-index: 40; opacity: 0; transition: opacity .2s; }
+.scrim { position: fixed; inset: 0; background: rgba(2, 12, 18, .72); z-index: 40; opacity: 0; transition: opacity .2s; }
 .scrim.on { opacity: 1; }
 .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; transform: translateY(105%); transition: transform .28s cubic-bezier(.2, .9, .2, 1); }
 .sheet.on { transform: none; }
@@ -196,7 +197,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 .sheet .actions .btn { flex: 1; }
 .err { color: var(--bad); font-size: 13px; margin: 0; }
 
-.toast { position: fixed; left: 50%; bottom: calc(200px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity .2s, transform .2s; z-index: 60; pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
+.toast { display: flex; align-items: center; gap: 14px; position: fixed; left: 50%; bottom: calc(200px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity .2s, transform .2s; z-index: 60; pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 
 /* benvenuto */
@@ -214,6 +215,57 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* iPhone stretti (≤ 380px): anello e cifre un filo più piccoli, così AMEX resta accanto alle spese varie */
+@media (max-width: 380px) {
+  .summary { gap: 16px; }
+  .ring, .ring svg { width: 104px; height: 104px; }
+  .ring-in .num { font-size: 24px; }
+  .kpis dd.num, .sv > .num { font-size: 25px; }
+  .sv { gap: 8px; }
+  .amex { padding-left: 8px; }
+  .amex .num { font-size: 16px; }
+}
+
+/* v1.7 — dettagli e animazioni */
+.cedrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: -6px; }
+.eye { width: 40px; height: 40px; border: 2px solid var(--line); border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; padding: 0; flex: none; }
+.eye svg { width: 19px; height: 19px; }
+.eye[aria-pressed="true"] { color: var(--ink); border-color: var(--line-strong); }
+html.privacy .num:not(.ring-in .num), html.privacy .amt, html.privacy .kpi-sub, html.privacy .pays .count { filter: blur(9px); transition: filter .25s; }
+html.privacy .t-copy { pointer-events: none; }
+
+.t-copy { border: 0; background: none; padding: 0; color: inherit; display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+.t-copy svg { width: 18px; height: 18px; color: var(--dim); flex: none; }
+.t-copy:active .t-num { opacity: .6; }
+
+.fold { width: 100%; border: 0; border-top: 1.5px solid var(--line); background: none; padding: 14px 0 6px; display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 13px; font-weight: 700; }
+.fold svg { width: 18px; height: 18px; transition: transform .25s; }
+.fold[aria-expanded="true"] svg { transform: rotate(180deg); }
+.list-done { animation: fadein .3s ease; }
+.alldone { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1.5px solid var(--line); font-weight: 700; color: #8FD3AC; }
+.alldone-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; flex: none; }
+.alldone-dot svg { width: 16px; height: 16px; stroke: #fff; stroke-width: 3.6; }
+
+.row.going { animation: going .26s ease forwards; }
+.row.coming { animation: coming .26s ease forwards; }
+@keyframes going { to { opacity: 0; transform: translateX(24px); } }
+@keyframes coming { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes fadein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.slide-l { animation: slidel .32s cubic-bezier(.2, .8, .2, 1); }
+.slide-r { animation: slider .32s cubic-bezier(.2, .8, .2, 1); }
+@keyframes slidel { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes slider { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+
+.ring.full svg { filter: drop-shadow(0 0 10px rgba(47, 138, 87, .45)); }
+.ring.celebrate { animation: pop .7s cubic-bezier(.3, 1.5, .5, 1); }
+.ring.celebrate::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--ok); animation: ripple .9s ease-out forwards; pointer-events: none; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes ripple { from { opacity: .9; transform: scale(.9); } to { opacity: 0; transform: scale(1.35); } }
+
+.toast.has-action { pointer-events: auto; }
+.toast-btn { border: 0; background: none; color: var(--ok); font-weight: 800; padding: 4px 2px; text-transform: uppercase; font-size: 12.5px; letter-spacing: .06em; filter: brightness(.85); }
 
 </style>
 </head>
@@ -294,14 +346,13 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     return r2(tot);
   }
 
-  /* Spendibile con AMEX nel mese k: lo paghi il mese dopo, quindi = spese varie di k+1, tra 0 e il tetto (default 500). */
+  /* Spendibile con AMEX nel mese k: lo paghi il mese dopo, quindi = spese varie di k+1 (mai sotto 0). */
   function amexDisponibile(db, k) {
-    var m = getM(db, k), s = db.settings || {};
-    var tetto = hasVal(s.amexTetto) ? Math.max(0, +s.amexTetto) : 500;
+    var m = getM(db, k);
     var base = calc(db, addM(k, 1)).varie;
-    var auto = r2(Math.min(tetto, Math.max(0, base)));
-    if (hasVal(m.amexLimite)) return { val: Math.max(0, +m.amexLimite), manuale: true, auto: auto, base: base, tetto: tetto };
-    return { val: auto, manuale: false, auto: auto, base: base, tetto: tetto };
+    var auto = r2(Math.max(0, base));
+    if (hasVal(m.amexLimite)) return { val: Math.max(0, +m.amexLimite), manuale: true, auto: auto, base: base };
+    return { val: auto, manuale: false, auto: auto, base: base };
   }
 
   function slug(s) {
@@ -423,6 +474,10 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var GRUPPI = { fisse: 'Spese fisse', carta: 'Carta di credito', investimento: 'Investimento' };
   var ICON = {
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7c1.8 0 3.4-.5 4.8-1.3"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
     left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
     right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
@@ -434,7 +489,9 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   };
 
   var db = null;
-  var ui = { tab: 'mese', month: C.nowKey() };
+  var ui = { tab: 'mese', month: C.nowKey(), prev: {}, showPaid: false, slide: null, celebrate: false };
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try { if (localStorage.getItem('finanze-ale-privacy') === '1') document.documentElement.classList.add('privacy'); } catch (e) { }
   try { var t = localStorage.getItem(TAB_KEY); if (t === 'anno' || t === 'imp') ui.tab = t; } catch (e) { }
 
   function load() {
@@ -488,14 +545,20 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     $tabs.innerHTML = '<div class="wrap">' + [['mese', 'Mese', ICON.mese], ['anno', 'Andamento', ICON.anno], ['imp', 'Impostazioni', ICON.set]].map(function (t) {
       return '<button class="tab" data-act="tab" data-tab="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : '') + '>' + t[2] + '<span>' + t[1] + '</span></button>';
     }).join('') + '</div>';
-    if (ui.tab === 'mese') { $top.innerHTML = topMese(); $main.innerHTML = '<div class="wrap">' + viewMese() + '</div>'; }
+    if (ui.tab === 'mese') {
+      $top.innerHTML = topMese();
+      $main.innerHTML = '<div class="wrap' + (ui.slide ? ' slide-' + ui.slide : '') + '">' + viewMese() + '</div>';
+      ui.slide = null;
+      animateIn();
+    }
     else if (ui.tab === 'anno') { $top.innerHTML = topPlain('Andamento', 'cosa ti aspetta'); $main.innerHTML = '<div class="wrap">' + viewAnno() + '</div>'; }
     else { $top.innerHTML = topPlain('Impostazioni', 'voci, stime e backup'); $main.innerHTML = '<div class="wrap">' + viewImp() + '</div>'; }
   }
   function topPlain(t, s) { return '<div class="wrap"><h1><small>' + esc(s) + '</small>' + esc(t) + '</h1></div>'; }
   function topMese() {
     var k = ui.month, cur = C.nowKey(), f = focusMonth();
-    var tag = k === cur ? 'questo mese' : (k < cur ? 'mese passato' : (k === C.addM(cur, 1) && fisseSaldate(cur) ? C.MESI[C.parseKey(cur).m - 1] + ' saldato' : 'in arrivo'));
+    var dl = (function () { var d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - d.getDate(); })();
+    var tag = k === cur ? 'questo mese' + (dl > 0 ? ' · ' + dl + (dl === 1 ? ' giorno' : ' giorni') + ' alla fine' : ' · ultimo giorno') : (k < cur ? 'mese passato' : (k === C.addM(cur, 1) && fisseSaldate(cur) ? C.MESI[C.parseKey(cur).m - 1] + ' saldato' : 'in arrivo'));
     return '<div class="wrap mhead">' +
       '<button class="navbtn" data-act="prev" aria-label="Mese precedente"' + (k <= startKey() ? ' disabled' : '') + '>' + ICON.left + '</button>' +
       '<h1><span class="mtitle">' + esc(C.label(k)) + '</span>' +
@@ -504,12 +567,14 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   }
   function eurS(v) { v = C.r2(v); return Math.abs(v - Math.round(v)) < 0.005 ? eur0(v) : eur(v); }
   function ringSVG(pct) {
-    var r = 54, c = 2 * Math.PI * r, d = Math.max(0, Math.min(1, pct)) * c;
-    return '<svg width="124" height="124" viewBox="0 0 124 124" role="img" aria-label="Pagato il ' + Math.round(pct * 100) + '% delle spese del mese">' +
+    var r = 54, c = 2 * Math.PI * r, p = Math.max(0, Math.min(1, pct));
+    var from = ui.prev.ring !== undefined && !REDUCED ? ui.prev.ring : (REDUCED ? p : 0);
+    return '<svg width="124" height="124" viewBox="0 0 124 124" role="img" aria-label="Pagato il ' + Math.round(p * 100) + '% delle spese del mese">' +
       '<circle cx="62" cy="62" r="' + r + '" fill="none" stroke="var(--track)" stroke-width="11"/>' +
-      (d > 0.5 ? '<circle class="ring-arc" cx="62" cy="62" r="' + r + '" fill="none" stroke="var(--ok)" stroke-width="11" stroke-linecap="round" stroke-dasharray="' + d.toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 62 62)"/>' : '') +
+      '<circle class="ring-arc" cx="62" cy="62" r="' + r + '" fill="none" stroke="var(--ok)" stroke-width="11" stroke-linecap="round" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - from)).toFixed(2) + '" data-to="' + (c * (1 - p)).toFixed(2) + '" data-p="' + p + '"' + (from <= 0.001 && p <= 0.001 ? ' style="opacity:0"' : '') + ' transform="rotate(-90 62 62)"/>' +
       '</svg>';
   }
+
 
   function viewMese() {
     var k = ui.month, c = C.calc(db, k), m = C.getM(db, k), cur = C.nowKey(), past = k < cur;
@@ -518,34 +583,48 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     var h = '';
     // Riepilogo: anello pagamenti + vincolo + spese varie
     h += '<section class="summary">' +
-      '<div class="ring">' + ringSVG(c.pct) + '<div class="ring-in"><span class="num">' + Math.round(c.pct * 100) + '%</span><small>pagato</small></div></div>' +
+      '<div class="ring' + (c.pct >= 0.999 ? ' full' : '') + (ui.celebrate ? ' celebrate' : '') + '">' + ringSVG(c.pct) + '<div class="ring-in"><span class="num" data-count="pct" data-val="' + Math.round(c.pct * 100) + '" data-fmt="pct">' + Math.round(c.pct * 100) + '%</span><small>pagato</small></div></div>' +
       '<dl class="kpis">' +
-      '<div><dt>Vincolo</dt><dd class="num">' + eurS(c.vincolo) + '</dd><dd class="kpi-sub">spese fisse ' + eurS(c.fisse) + '</dd></div>' +
-      '<div><dt>Spese varie</dt><dd class="sv"><span class="num' + (c.varie < 0 ? ' bad' : '') + '">' + eurS(c.varie) + '</span>' +
-      '<button class="amex' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="Spendibile con AMEX: ' + eurS(ax.val) + '. Tocca per modificare"><span class="plus">+</span><span class="num">' + eurS(ax.val) + '</span><small>AMEX</small></button></dd></div>' +
+      '<div><dt>Vincolo</dt><dd class="num" data-count="vin" data-val="' + c.vincolo + '" data-fmt="s">' + eurS(c.vincolo) + '</dd><dd class="kpi-sub">spese fisse ' + eurS(c.fisse) + '</dd></div>' +
+      '<div><dt>Spese varie</dt><dd class="sv"><span class="num' + (c.varie < 0 ? ' bad' : '') + '" data-count="var" data-val="' + c.varie + '" data-fmt="s">' + eurS(c.varie) + '</span>' +
+      '<button class="amex' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="Spendibile con AMEX: ' + eurS(ax.val) + '. Tocca per modificare"><small>AMEX</small><span class="num" data-count="amex" data-val="' + ax.val + '" data-fmt="amex">+' + eurS(ax.val) + '</span></button></dd></div>' +
       '</dl></section>';
-    h += '<button class="ced" data-act="reddito">' + (c.stima ? 'Cedolino di ' + prevNome + ' stimato · <u>inserisci</u>' : 'Cedolino di ' + prevNome + ' inserito · <u>modifica</u>') + '</button>';
+    var priv = document.documentElement.classList.contains('privacy');
+    h += '<div class="cedrow"><button class="ced" data-act="reddito">' + (c.stima ? 'Cedolino di ' + prevNome + ' stimato · <u>inserisci</u>' : 'Cedolino di ' + prevNome + ' inserito · <u>modifica</u>') + '</button>' +
+      '<button class="eye" data-act="privacy" aria-pressed="' + priv + '" aria-label="' + (priv ? 'Mostra gli importi' : 'Nascondi gli importi') + '">' + (priv ? ICON.eyeoff : ICON.eye) + '</button></div>';
 
     var nx = C.addM(k, 1);
     if (k === cur && new Date().getDate() >= 20 && !C.hasVal(C.getM(db, nx).reddito)) {
       h += '<button class="nudge" data-act="redditonext"><span><b>Arrivato il cedolino di ' + C.MESI[C.parseKey(k).m - 1] + '?</b><small>Inseriscilo: decide quanto spostare a ' + C.MESI[C.parseKey(nx).m - 1] + '.</small></span>' + ICON.chev + '</button>';
     }
 
-    // Pagamenti
-    h += '<section class="pays"><header><h2>Pagamenti</h2><span class="count">' + c.nPag + ' di ' + c.nVoci + (c.daPagare > 0.005 ? ' · mancano ' + eurS(c.daPagare) : (c.tot > 0 ? ' · tutto pagato' : '')) + '</span></header><ul class="list">';
-    db.voci.forEach(function (v) {
+    // Pagamenti: da pagare in alto, pagati e a zero raggruppati sotto
+    var rowHTML = function (v) {
       var a = C.amt(db, k, v), paid = !!(m.pagati && m.pagati[v.id]);
       var cls = ['row'], tag = '';
       if (paid) cls.push('paid');
       else if (a <= 0) { cls.push('zero'); tag = '<span class="tag">· nessuna</span>'; }
       else if (past) { cls.push('late'); tag = '<span class="tag">· da spuntare</span>'; }
       else if (v.stima) { cls.push('est'); tag = '<span class="tag">· stima</span>'; }
-      h += '<li class="' + cls.join(' ') + '">' +
+      return '<li class="' + cls.join(' ') + '" data-row="' + esc(v.id) + '">' +
         '<button class="check" data-act="toggle" data-id="' + esc(v.id) + '" aria-pressed="' + paid + '" aria-label="' + (paid ? 'Segna come non pagato: ' : 'Segna come pagato: ') + esc(v.nome) + '">' + ICON.check + '</button>' +
         '<span class="name">' + esc(v.nome) + tag + '</span>' +
         '<button class="amt num" data-act="amt" data-id="' + esc(v.id) + '" aria-label="Modifica importo ' + esc(v.nome) + '">' + eur(a) + '</button></li>';
+    };
+    var todo = [], done = [];
+    db.voci.forEach(function (v) {
+      var a = C.amt(db, k, v), paid = !!(m.pagati && m.pagati[v.id]);
+      (paid || a <= 0 ? done : todo).push(v);
     });
-    h += '</ul></section>';
+    h += '<section class="pays"><header><h2>Pagamenti</h2><span class="count">' + c.nPag + ' di ' + c.nVoci + (c.daPagare > 0.005 ? ' · mancano ' + eurS(c.daPagare) : (c.tot > 0 ? ' · tutto pagato' : '')) + '</span></header><ul class="list">';
+    if (!todo.length) h += '<li class="alldone"><span class="alldone-dot">' + ICON.check + '</span>Tutto pagato per <span style="text-transform:capitalize">&nbsp;' + esc(C.MESI[C.parseKey(k).m - 1]) + '</span></li>';
+    todo.forEach(function (v) { h += rowHTML(v); });
+    h += '</ul>';
+    if (done.length) {
+      h += '<button class="fold" data-act="fold" aria-expanded="' + ui.showPaid + '"><span>Pagati e a zero · ' + done.length + '</span>' + ICON.down + '</button>';
+      if (ui.showPaid) { h += '<ul class="list list-done">'; done.forEach(function (v) { h += rowHTML(v); }); h += '</ul>'; }
+    }
+    h += '</section>';
 
     // Barra trasferimento (fissa in basso)
     var sp = m.spostato || null, spAmt = sp ? (+sp.importo || 0) : 0, manca = sp ? C.r2(c.spostare - spAmt) : 0;
@@ -554,7 +633,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     if (sp && spDone) lab += ' · fatto il ' + dayLabel(sp.data);
     else if (sp) lab += ' · spostati ' + eurS(spAmt) + ' il ' + dayLabel(sp.data) + ' · ' + (manca > 0 ? 'mancano ' + eurS(manca) : eurS(-manca) + ' in più');
     $bar.innerHTML = '<div class="wrap"><div class="transfer' + (spDone ? ' done' : '') + (sp && !spDone ? ' partial' : '') + '">' +
-      '<div class="t-main"><span class="t-lab">' + esc(lab) + '</span><span class="t-num num' + (c.spostare < 0 ? ' bad' : '') + '">' + eur(c.spostare) + '</span></div>' +
+      '<div class="t-main"><span class="t-lab">' + esc(lab) + '</span><button class="t-copy" data-act="copy" data-v="' + c.spostare + '" aria-label="Copia l\'importo da spostare"><span class="t-num num' + (c.spostare < 0 ? ' bad' : '') + '" data-count="sp" data-val="' + c.spostare + '" data-fmt="f">' + eur(c.spostare) + '</span>' + ICON.copy + '</button></div>' +
       '<button class="t-check" data-act="spostato" aria-pressed="' + spDone + '" aria-label="' + (spDone ? 'Spostato. Tocca per annullare' : (sp ? 'Aggiorna: segna l\'importo attuale come spostato' : 'Segna come spostato')) + '">' + ICON.check + '</button>' +
       '</div></div>';
     return h;
@@ -634,9 +713,6 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
         return '<div class="field"><label for="f-st-' + i + '">' + n.slice(0, 3) + '</label><input class="input num" id="f-st-' + i + '" inputmode="decimal" value="' + numStr(st[i]) + '" placeholder="' + numStr(s.redditoAtteso) + '" data-change="stima" data-i="' + i + '"></div>';
       }).join('') + '</div>' +
       '<p class="note">Il vincolo è sempre arrotondato per eccesso a 10 €.</p></section>';
-    h += '<section class="card"><header><h2>AMEX</h2></header>' +
-      '<div class="field"><label for="f-amext">Tetto mensile</label><input class="input num" id="f-amext" inputmode="decimal" value="' + numStr(C.hasVal(s.amexTetto) ? s.amexTetto : 500) + '" data-change="amextetto"></div>' +
-      '<p class="note">Lo spendibile con AMEX di un mese è pari alle spese varie del mese dopo, fino a questo tetto. Puoi cambiarlo mese per mese toccando la cifra accanto alle spese varie.</p></section>';
     h += '<section class="card"><header><h2>ETF</h2></header>' +
       '<div class="field"><label for="f-inv">Già investito (fino a ' + esc(C.label(s.investitoRif || C.nowKey())) + ' incluso)</label><input class="input num" id="f-inv" inputmode="decimal" value="' + numStr(s.investitoBase || 0) + '" data-change="invbase"></div>' +
       '<p class="note">Da qui in poi l\'app aggiunge ogni investimento che spunti. Se aggiorni il totale, vale fino al mese corrente incluso.</p></section>';
@@ -653,13 +729,13 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 1.4</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 1.8</p>';
     return h;
   }
 
   function viewWelcome() {
     return '<div class="wrap welcome">' +
-      '<svg class="mark" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="29" fill="none" stroke="#222326" stroke-width="8"/><circle cx="36" cy="36" r="29" fill="none" stroke="#2F8A57" stroke-width="8" stroke-linecap="round" stroke-dasharray="110 183" transform="rotate(-90 36 36)"/></svg>' +
+      '<svg class="mark" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="29" fill="none" stroke="#193546" stroke-width="8"/><circle cx="36" cy="36" r="29" fill="none" stroke="#2F8A57" stroke-width="8" stroke-linecap="round" stroke-dasharray="110 183" transform="rotate(-90 36 36)"/></svg>' +
       '<h2>Le tue finanze, mese per mese.</h2>' +
       '<p>Tieni d\'occhio le spese fisse, spunta quelle pagate e sappi subito quanto spostare da Credit Agricole a Trade.</p>' +
       '<div class="choices">' +
@@ -731,7 +807,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   function sheetAmex() {
     var k = ui.month, ax = C.amexDisponibile(db, k), nxl = C.label(C.addM(k, 1));
     openSheet('<h3>AMEX · <span style="text-transform:capitalize">' + esc(C.label(k)) + '</span></h3>' +
-      '<p class="note">Quanto puoi spendere con la carta questo mese: lo paghi a ' + esc(nxl) + '. Il calcolo usa le spese varie di ' + esc(nxl) + ' (' + eur(ax.base) + '), al massimo ' + eur0(ax.tetto) + ' e mai sotto 0.</p>' +
+      '<p class="note">Quanto puoi spendere con la carta questo mese: lo paghi a ' + esc(nxl) + '. È pari alle spese varie di ' + esc(nxl) + ' (' + eur(ax.base) + ')' + (ax.base < 0 ? ', che sono negative: quindi 0' : '') + '.</p>' +
       '<div class="field"><label for="s-amex">Spendibile con AMEX</label><input class="input input-big" id="s-amex" inputmode="decimal" value="' + numStr(ax.val) + '" autocomplete="off"></div>' +
       (ax.manuale ? '<p class="note">Valore inserito a mano. Calcolo automatico: ' + eur(ax.auto) + '.</p>' : '') +
       ERR + ACTIONS('Salva', ax.manuale ? '<button type="button" class="btn btn-block" data-act="amexauto">Torna al calcolo automatico</button>' : ''),
@@ -874,14 +950,39 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     var a = t.getAttribute('data-act'), id = t.getAttribute('data-id');
     switch (a) {
       case 'tab': ui.tab = t.getAttribute('data-tab'); try { localStorage.setItem(TAB_KEY, ui.tab); } catch (er) { } render(); window.scrollTo(0, 0); break;
-      case 'prev': if (ui.month > startKey()) { ui.month = C.addM(ui.month, -1); render(); } break;
-      case 'next': ui.month = C.addM(ui.month, 1); render(); break;
+      case 'prev': goMonth(-1); break;
+      case 'next': goMonth(1); break;
       case 'oggi': ui.month = focusMonth(); render(); break;
       case 'gomonth': ui.month = t.getAttribute('data-k'); ui.tab = 'mese'; try { localStorage.setItem(TAB_KEY, 'mese'); } catch (er) { } render(); window.scrollTo(0, 0); break;
       case 'toggle': {
-        var m = ensure(ui.month);
-        if (m.pagati[id]) delete m.pagati[id]; else m.pagati[id] = true;
-        save(); render();
+        var tk = ui.month, m = ensure(tk), was = fisseSaldate(tk), nowPaid = !m.pagati[id], vv = voce(id);
+        var apply = function () {
+          if (nowPaid) m.pagati[id] = true; else delete m.pagati[id];
+          save();
+          if (!was && fisseSaldate(tk)) ui.celebrate = true;
+          render();
+          if (ui.celebrate) {
+            setTimeout(function () { ui.celebrate = false; }, 50);
+            toast(cap(C.MESI[C.parseKey(tk).m - 1]) + ' saldato · alla prossima apertura vedi ' + C.MESI[C.parseKey(C.addM(tk, 1)).m - 1]);
+          } else {
+            toast((vv ? vv.nome : 'Voce') + (nowPaid ? ' pagato' : ' da pagare'), { label: 'Annulla', fn: function () { if (nowPaid) delete m.pagati[id]; else m.pagati[id] = true; save(); render(); } });
+          }
+        };
+        var li = t.closest('li');
+        if (li && !REDUCED) { li.classList.add(nowPaid ? 'going' : 'coming'); setTimeout(apply, 260); } else apply();
+        break;
+      }
+      case 'fold': ui.showPaid = !ui.showPaid; render(); break;
+      case 'privacy': {
+        var on = document.documentElement.classList.toggle('privacy');
+        try { localStorage.setItem('finanze-ale-privacy', on ? '1' : '0'); } catch (er) { }
+        render(); toast(on ? 'Importi nascosti' : 'Importi visibili'); break;
+      }
+      case 'copy': {
+        var txt = C.r2(+t.getAttribute('data-v')).toFixed(2).replace('.', ',');
+        var ok = function () { toast('Copiato ' + txt + ' · incollalo nel bonifico'); };
+        var fb = function () { var ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length); try { document.execCommand('copy'); ok(); } catch (er) { toast('Non riesco a copiare'); } ta.remove(); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, fb); else fb();
         break;
       }
       case 'amt': sheetAmt(id); break;
@@ -937,16 +1038,69 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
         db.settings.stimeCedolino[si] = sn === null ? null : C.r2(sn); save(); toast('Stima di ' + C.MESI[si] + ' aggiornata');
       } else { toast('Importo non valido'); t.value = numStr((db.settings.stimeCedolino || [])[si]); }
     }
-    else if (w === 'amextetto') { var at = parseNum(t.value); if (isFinite(at) && at >= 0) { db.settings.amexTetto = C.r2(at); save(); toast('Tetto AMEX aggiornato'); } else { toast('Importo non valido'); t.value = numStr(C.hasVal(db.settings.amexTetto) ? db.settings.amexTetto : 500); } }
     else if (w === 'invbase') { var iv = parseNum(t.value); if (isFinite(iv) && iv >= 0) { db.settings.investitoBase = C.r2(iv); db.settings.investitoRif = C.nowKey(); save(); render(); toast('Totale investito aggiornato'); } else { toast('Importo non valido'); t.value = numStr(db.settings.investitoBase || 0); } }
     else if (w === 'arrot') { db.settings.arrot = +t.value; save(); toast('Arrotondamento aggiornato'); }
   });
 
   var toastT = null;
-  function toast(msg) {
+  function toast(msg, action) {
     var el = document.getElementById('toast');
-    el.textContent = msg; el.classList.add('on');
-    clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('on'); }, 2200);
+    el.innerHTML = '<span>' + esc(msg) + '</span>' + (action ? '<button type="button" class="toast-btn">' + esc(action.label) + '</button>' : '');
+    el.classList.toggle('has-action', !!action);
+    if (action) el.querySelector('.toast-btn').onclick = function () { el.classList.remove('on'); action.fn(); };
+    el.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('on'); }, action ? 4000 : 2400);
+  }
+  function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
+
+  /* Cambio mese con scorrimento */
+  function goMonth(dir) {
+    if (dir < 0 && ui.month <= startKey()) return;
+    ui.month = C.addM(ui.month, dir); ui.slide = dir > 0 ? 'l' : 'r'; render();
+  }
+  var tx = null;
+  $main.addEventListener('touchstart', function (e) { if (e.touches.length === 1) tx = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() }; }, { passive: true });
+  $main.addEventListener('touchend', function (e) {
+    if (!tx || ui.tab !== 'mese' || !$sheet.hidden || !db) { tx = null; return; }
+    var dx = e.changedTouches[0].clientX - tx.x, dy = e.changedTouches[0].clientY - tx.y, dt = Date.now() - tx.t; tx = null;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 50 && dt < 700) goMonth(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  /* Animazioni: anello che si riempie e cifre che scorrono */
+  function fmtCount(f, v, target) {
+    if (f === 'pct') return Math.round(v) + '%';
+    if (f === 'f') return eur(v);
+    var whole = Math.abs(target - Math.round(target)) < 0.005;
+    var str = whole ? eur0(v) : eur(v);
+    return f === 'amex' ? '+' + str : str;
+  }
+  function animateIn() {
+    var arc = $main.querySelector('.ring-arc');
+    if (arc) {
+      var p = +arc.getAttribute('data-p');
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        if (p > 0.001) arc.style.opacity = '';
+        arc.setAttribute('stroke-dashoffset', arc.getAttribute('data-to'));
+        if (p <= 0.001) setTimeout(function () { arc.style.opacity = '0'; }, 500);
+      }); });
+      ui.prev.ring = p;
+    }
+    var els = document.querySelectorAll('[data-count]');
+    Array.prototype.forEach.call(els, function (el) {
+      var key = el.getAttribute('data-count'), to = +el.getAttribute('data-val'), f = el.getAttribute('data-fmt');
+      var from = ui.prev[key] !== undefined ? ui.prev[key] : 0;
+      ui.prev[key] = to;
+      if (REDUCED || Math.abs(from - to) < 0.005) { el.textContent = fmtCount(f, to, to); return; }
+      var t0 = null, dur = 550;
+      var step = function (ts) {
+        if (t0 === null) t0 = ts;
+        var q = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - q, 3);
+        el.textContent = fmtCount(f, from + (to - from) * e, to);
+        if (q < 1) requestAnimationFrame(step);
+      };
+      el.textContent = fmtCount(f, from, to);
+      requestAnimationFrame(step);
+    });
   }
 
   // when the app comes back to the foreground on a new month, jump to it
