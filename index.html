@@ -72,8 +72,8 @@ main .wrap { display: grid; gap: 22px; padding-block: 8px 12px; }
 .ring svg { display: block; }
 .ring-arc { transition: stroke-dashoffset .7s cubic-bezier(.2, .8, .2, 1), opacity .2s; }
 .ring-in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.ring-in .num { font-size: 27px; font-weight: 800; line-height: 1; }
-.ring-in small { font-size: 11px; font-weight: 600; color: var(--muted); }
+.ring-in .num { font-size: 21px; font-weight: 800; line-height: 1; }
+.ring-in small { font-size: 9.5px; font-weight: 700; color: var(--muted); line-height: 1.15; margin-top: 3px; letter-spacing: .02em; }
 .kpis { flex: 1; min-width: 0; display: grid; gap: 16px; margin: 0; }
 .kpis > div { display: grid; gap: 1px; }
 .kpis dt { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -220,7 +220,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 @media (max-width: 380px) {
   .summary { gap: 16px; }
   .ring, .ring svg { width: 104px; height: 104px; }
-  .ring-in .num { font-size: 24px; }
+  .ring-in .num { font-size: 19px; }
   .kpis dd.num, .sv > .num { font-size: 25px; }
   .sv { gap: 8px; }
   .amex { padding-left: 8px; }
@@ -264,8 +264,28 @@ html.privacy .t-copy { pointer-events: none; }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
 @keyframes ripple { from { opacity: .9; transform: scale(.9); } to { opacity: 0; transform: scale(1.35); } }
 
-.toast.has-action { pointer-events: auto; }
+.toast.has-action.on { pointer-events: auto; }
 .toast-btn { border: 0; background: none; color: var(--ok); font-weight: 800; padding: 4px 2px; text-transform: uppercase; font-size: 12.5px; letter-spacing: .06em; filter: brightness(.85); }
+
+/* v1.9 */
+body.no-bar main { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+.row[data-row] { cursor: pointer; }
+.row[data-row]:active { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.transfer.archiving { animation: archive .32s ease forwards; }
+@keyframes archive { to { opacity: 0; transform: translateY(30px); } }
+
+/* andamento: tabelle compatte */
+.tbl { display: grid; }
+.tr { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1fr; align-items: baseline; gap: 8px; padding: 12px 0; border: 0; border-top: 1.5px solid var(--line); background: none; text-align: right; width: 100%; font-size: 17px; }
+.tr > :first-child { text-align: left; }
+.tr .num { font-weight: 800; }
+.tr .est { font-style: italic; color: var(--muted); }
+.th { border-top: 0; padding: 0 0 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tm { font-weight: 700; font-size: 15px; }
+.tr2 { grid-template-columns: 70px 1fr auto; text-align: left; }
+.tr2 .why { color: var(--muted); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr2 .num { text-align: right; }
+.tbl > .tr:first-child:not(.th) { border-top: 0; }
 
 </style>
 </head>
@@ -310,13 +330,17 @@ html.privacy .t-copy { pointer-events: none; }
 
   function calc(db, k) {
     var m = getM(db, k), s = db.settings || {};
-    var fisse = 0, inv = 0, tot = 0, pag = 0, nVoci = 0, nPag = 0;
+    var fisse = 0, inv = 0, tot = 0, pag = 0, nVoci = 0, nPag = 0, nF = 0, nFPag = 0, pagF = 0;
     db.voci.forEach(function (v) {
-      var a = amt(db, k, v);
-      if (v.gruppo === 'investimento') inv += a; else fisse += a;
+      var a = amt(db, k, v), isInv = v.gruppo === 'investimento', paid = !!(m.pagati && m.pagati[v.id]);
+      if (isInv) inv += a; else fisse += a;
       tot += a;
-      if (a > 0) { nVoci++; if (m.pagati && m.pagati[v.id]) { pag += a; nPag++; } }
+      if (a > 0) {
+        nVoci++; if (paid) { pag += a; nPag++; }
+        if (!isInv) { nF++; if (paid) { pagF += a; nFPag++; } }
+      }
     });
+    pagF = r2(pagF);
     fisse = r2(fisse); inv = r2(inv); tot = r2(tot); pag = r2(pag);
     var vincolo = Math.ceil(fisse / 10 - 1e-9) * 10; // sempre per eccesso a 10 €
     var stima = !hasVal(m.reddito);
@@ -326,7 +350,9 @@ html.privacy .t-copy { pointer-events: none; }
     return {
       fisse: fisse, inv: inv, tot: tot, pag: pag, daPagare: r2(tot - pag), nVoci: nVoci, nPag: nPag,
       vincolo: vincolo, reddito: reddito, stima: stima, varie: varie, spostare: r2(varie + inv),
-      speso: speso, residuo: r2(varie - speso), pct: tot > 0 ? pag / tot : 0
+      speso: speso, residuo: r2(varie - speso), pct: tot > 0 ? pag / tot : 0,
+      /* solo spese fisse (escluso l'investimento ETF) */
+      nF: nF, nFPag: nFPag, pagF: pagF, daPagareF: r2(fisse - pagF), pctF: fisse > 0 ? pagF / fisse : 0
     };
   }
 
@@ -540,6 +566,7 @@ html.privacy .t-copy { pointer-events: none; }
 
   function render() {
     $bar.hidden = !(db && ui.tab === 'mese');
+    document.body.classList.toggle('no-bar', !(db && ui.tab === 'mese'));
     if (!db) { $top.innerHTML = ''; $tabs.hidden = true; $main.innerHTML = viewWelcome(); return; }
     $tabs.hidden = false;
     $tabs.innerHTML = '<div class="wrap">' + [['mese', 'Mese', ICON.mese], ['anno', 'Andamento', ICON.anno], ['imp', 'Impostazioni', ICON.set]].map(function (t) {
@@ -583,7 +610,7 @@ html.privacy .t-copy { pointer-events: none; }
     var h = '';
     // Riepilogo: anello pagamenti + vincolo + spese varie
     h += '<section class="summary">' +
-      '<div class="ring' + (c.pct >= 0.999 ? ' full' : '') + (ui.celebrate ? ' celebrate' : '') + '">' + ringSVG(c.pct) + '<div class="ring-in"><span class="num" data-count="pct" data-val="' + Math.round(c.pct * 100) + '" data-fmt="pct">' + Math.round(c.pct * 100) + '%</span><small>pagato</small></div></div>' +
+      '<div class="ring' + (c.pctF >= 0.999 ? ' full' : '') + (ui.celebrate ? ' celebrate' : '') + '">' + ringSVG(c.pctF) + '<div class="ring-in"><span class="num" data-count="pct" data-val="' + Math.round(c.pctF * 100) + '" data-fmt="pct">' + Math.round(c.pctF * 100) + '%</span><small>spese fisse<br>pagate</small></div></div>' +
       '<dl class="kpis">' +
       '<div><dt>Vincolo</dt><dd class="num" data-count="vin" data-val="' + c.vincolo + '" data-fmt="s">' + eurS(c.vincolo) + '</dd><dd class="kpi-sub">spese fisse ' + eurS(c.fisse) + '</dd></div>' +
       '<div><dt>Spese varie</dt><dd class="sv"><span class="num' + (c.varie < 0 ? ' bad' : '') + '" data-count="var" data-val="' + c.varie + '" data-fmt="s">' + eurS(c.varie) + '</span>' +
@@ -611,31 +638,42 @@ html.privacy .t-copy { pointer-events: none; }
         '<span class="name">' + esc(v.nome) + tag + '</span>' +
         '<button class="amt num" data-act="amt" data-id="' + esc(v.id) + '" aria-label="Modifica importo ' + esc(v.nome) + '">' + eur(a) + '</button></li>';
     };
+    var spX = m.spostato || null, spXdone = !!spX && Math.abs(C.r2(c.spostare - (+spX.importo || 0))) < 0.5;
     var todo = [], done = [];
     db.voci.forEach(function (v) {
       var a = C.amt(db, k, v), paid = !!(m.pagati && m.pagati[v.id]);
       (paid || a <= 0 ? done : todo).push(v);
     });
-    h += '<section class="pays"><header><h2>Pagamenti</h2><span class="count">' + c.nPag + ' di ' + c.nVoci + (c.daPagare > 0.005 ? ' · mancano ' + eurS(c.daPagare) : (c.tot > 0 ? ' · tutto pagato' : '')) + '</span></header><ul class="list">';
+    h += '<section class="pays"><header><h2>Pagamenti</h2><span class="count">' + c.nFPag + ' di ' + c.nF + (c.daPagareF > 0.005 ? ' · mancano ' + eurS(c.daPagareF) : (c.fisse > 0 ? ' · spese fisse pagate' : '')) + '</span></header><ul class="list">';
     if (!todo.length) h += '<li class="alldone"><span class="alldone-dot">' + ICON.check + '</span>Tutto pagato per <span style="text-transform:capitalize">&nbsp;' + esc(C.MESI[C.parseKey(k).m - 1]) + '</span></li>';
     todo.forEach(function (v) { h += rowHTML(v); });
     h += '</ul>';
-    if (done.length) {
-      h += '<button class="fold" data-act="fold" aria-expanded="' + ui.showPaid + '"><span>Pagati e a zero · ' + done.length + '</span>' + ICON.down + '</button>';
-      if (ui.showPaid) { h += '<ul class="list list-done">'; done.forEach(function (v) { h += rowHTML(v); }); h += '</ul>'; }
+    if (done.length || spXdone) {
+      h += '<button class="fold" data-act="fold" aria-expanded="' + ui.showPaid + '"><span>Pagati e a zero · ' + (done.length + (spXdone ? 1 : 0)) + '</span>' + ICON.down + '</button>';
+      if (ui.showPaid) {
+        h += '<ul class="list list-done">';
+        if (spXdone) h += '<li class="row paid" data-row="__spostato">' +
+          '<button class="check" data-act="spostato" aria-pressed="true" aria-label="Trasferimento fatto. Tocca per annullare">' + ICON.check + '</button>' +
+          '<span class="name">Spostati su Trade<span class="tag">· ' + dayLabel(spX.data) + '</span></span><span class="amt num">' + eur(+spX.importo || 0) + '</span></li>';
+        done.forEach(function (v) { h += rowHTML(v); });
+        h += '</ul>';
+      }
     }
     h += '</section>';
 
-    // Barra trasferimento (fissa in basso)
+    // Barra trasferimento (fissa in basso): sparisce quando è fatto e finisce tra i pagati
     var sp = m.spostato || null, spAmt = sp ? (+sp.importo || 0) : 0, manca = sp ? C.r2(c.spostare - spAmt) : 0;
     var spDone = !!sp && Math.abs(manca) < 0.5;
-    var lab = 'Da spostare';
-    if (sp && spDone) lab += ' · fatto il ' + dayLabel(sp.data);
-    else if (sp) lab += ' · spostati ' + eurS(spAmt) + ' il ' + dayLabel(sp.data) + ' · ' + (manca > 0 ? 'mancano ' + eurS(manca) : eurS(-manca) + ' in più');
-    $bar.innerHTML = '<div class="wrap"><div class="transfer' + (spDone ? ' done' : '') + (sp && !spDone ? ' partial' : '') + '">' +
-      '<div class="t-main"><span class="t-lab">' + esc(lab) + '</span><button class="t-copy" data-act="copy" data-v="' + c.spostare + '" aria-label="Copia l\'importo da spostare"><span class="t-num num' + (c.spostare < 0 ? ' bad' : '') + '" data-count="sp" data-val="' + c.spostare + '" data-fmt="f">' + eur(c.spostare) + '</span>' + ICON.copy + '</button></div>' +
-      '<button class="t-check" data-act="spostato" aria-pressed="' + spDone + '" aria-label="' + (spDone ? 'Spostato. Tocca per annullare' : (sp ? 'Aggiorna: segna l\'importo attuale come spostato' : 'Segna come spostato')) + '">' + ICON.check + '</button>' +
-      '</div></div>';
+    if (spDone) { $bar.innerHTML = ''; $bar.hidden = true; document.body.classList.add('no-bar'); }
+    else {
+      document.body.classList.remove('no-bar');
+      var lab = 'Da spostare';
+      if (sp) lab += ' · spostati ' + eurS(spAmt) + ' il ' + dayLabel(sp.data) + ' · ' + (manca > 0 ? 'mancano ' + eurS(manca) : eurS(-manca) + ' in più');
+      $bar.innerHTML = '<div class="wrap"><div class="transfer' + (sp ? ' partial' : '') + '">' +
+        '<div class="t-main"><span class="t-lab">' + esc(lab) + '</span><button class="t-copy" data-act="copy" data-v="' + c.spostare + '" aria-label="Copia l\'importo da spostare"><span class="t-num num' + (c.spostare < 0 ? ' bad' : '') + '" data-count="sp" data-val="' + c.spostare + '" data-fmt="f">' + eur(c.spostare) + '</span>' + ICON.copy + '</button></div>' +
+        '<button class="t-check" data-act="spostato" aria-label="' + (sp ? 'Aggiorna: segna l\'importo attuale come spostato' : 'Segna come spostato') + '">' + ICON.check + '</button>' +
+        '</div></div>';
+    }
     return h;
   }
 
@@ -651,58 +689,51 @@ html.privacy .t-copy { pointer-events: none; }
 
   function viewAnno() {
     var ks = rangeKeys(), cur = C.nowKey(), h = '';
-    // Prossimi 3 mesi
-    var next = [1, 2, 3].map(function (n) { return C.addM(cur, n); });
-    var tot = { fisse: 0, vin: 0, varie: 0 };
-    h += '<section class="card"><header><h2>Prossimi 3 mesi</h2></header><div class="fc">';
-    next.forEach(function (k) {
-      var c = C.calc(db, k);
-      tot.fisse += c.fisse; tot.vin += c.vincolo; tot.varie += c.varie;
-      h += '<button class="fc-month" data-act="gomonth" data-k="' + k + '"><span class="fc-head"><span>' + esc(C.label(k)) + '</span>' + (c.stima ? '<span class="pill pill-warn">cedolino stimato</span>' : '<span class="pill pill-ok">cedolino inserito</span>') + '</span>' +
-        '<span class="fc-row">' +
-        '<span><small>Spese fisse</small><b class="num">' + eur0(c.fisse) + '</b></span>' +
-        '<span><small>Vincolo</small><b class="num">' + eur0(c.vincolo) + '</b></span>' +
-        '<span><small>Spese varie</small><b class="num"' + (c.varie < 0 ? ' style="color:var(--bad)"' : '') + '>' + eur0(c.varie) + '</b></span>' +
-        '</span></button>';
-    });
-    h += '</div><p class="sub">In tutto: spese fisse <b class="num">' + eur0(tot.fisse) + '</b> · vincolo <b class="num">' + eur0(tot.vin) + '</b> · spese varie <b class="num">' + eur0(tot.varie) + '</b></p>' +
-      '<p class="note">Spese fisse con gli importi previsti (bollette stimate). Tocca un mese per aprirlo.</p></section>';
+    var mm = function (k) { var p = C.parseKey(k); return cap(C.MESI[p.m - 1].slice(0, 3)) + ' ' + String(p.y).slice(2); };
 
-    // media spese fisse
+    // Prossimi 3 mesi: una tabella compatta
+    h += '<section class="card"><header><h2>Prossimi 3 mesi</h2></header><div class="tbl" role="table">' +
+      '<div class="tr th" role="row"><span role="columnheader"></span><span role="columnheader">Fisse</span><span role="columnheader">Vincolo</span><span role="columnheader">Varie</span></div>';
+    [1, 2, 3].forEach(function (n) {
+      var k = C.addM(cur, n), c = C.calc(db, k);
+      h += '<button class="tr" role="row" data-act="gomonth" data-k="' + k + '"><span class="tm">' + mm(k) + '</span>' +
+        '<span class="num">' + eur0(c.fisse) + '</span><span class="num">' + eur0(c.vincolo) + '</span>' +
+        '<span class="num' + (c.varie < 0 ? ' bad' : '') + (c.stima ? ' est' : '') + '">' + eur0(c.varie) + '</span></button>';
+    });
+    h += '</div><p class="note">In corsivo: calcolato su un cedolino stimato.</p></section>';
+
+    // Medie
     var sumF = 0, sumV = 0;
     ks.forEach(function (k) { var c = C.calc(db, k); sumF += c.fisse; sumV += c.vincolo; });
     var nk = Math.max(ks.length, 1);
-    h += '<section class="card"><header><h2>Spese fisse mensili</h2></header><div class="stats">' +
-      stat('Media spese fisse', sumF / nk, 'escluso investimento') +
-      stat('Media vincolo', sumV / nk, 'arrotondato a 10 €') +
-      '</div><p class="note">Calcolata su ' + nk + ' mesi (' + C.shortLabel(ks[0]) + ' → ' + C.shortLabel(ks[ks.length - 1]) + '). Si aggiorna da sola quando cambi un importo.</p></section>';
+    h += '<section class="card"><header><h2>Media mensile</h2><span class="count">' + mm(ks[0]) + ' → ' + mm(ks[ks.length - 1]) + '</span></header><div class="stats">' +
+      stat('Spese fisse', sumF / nk) + stat('Vincolo', sumV / nk) + '</div></section>';
 
-    // heavy months
-    var avg = ks.reduce(function (s, k) { return s + C.calc(db, k).vincolo; }, 0) / Math.max(ks.length, 1);
+    // Mesi pesanti: mese, motivo principale, vincolo
+    var avg = sumV / nk;
     var heavy = ks.filter(function (k) { return k > cur; }).map(function (k) { return { k: k, c: C.calc(db, k) }; })
       .filter(function (x) { return x.c.vincolo > avg * 1.08; }).sort(function (a, b) { return b.c.vincolo - a.c.vincolo; }).slice(0, 3)
       .sort(function (a, b) { return a.k < b.k ? -1 : 1; });
     if (heavy.length) {
-      h += '<section class="card"><header><h2>Mesi pesanti in arrivo</h2></header><p class="sub">Il vincolo medio è ' + eur0(avg) + '. Questi mesi lo superano:</p><div class="heavy">';
+      h += '<section class="card"><header><h2>Mesi pesanti</h2><span class="count">vincolo sopra la media</span></header><div class="tbl">';
       heavy.forEach(function (x) {
-        var extra = db.voci.filter(function (v) { var a = C.amt(db, x.k, v), d = +v.importo || 0; return v.gruppo !== 'investimento' && a > d + 1 && (!v.stima || a > d * 1.5); })
-          .map(function (v) { return esc(v.nome) + ' ' + eur0(C.amt(db, x.k, v)); });
-        h += '<button data-act="gomonth" data-k="' + x.k + '"><span class="h1"><span>' + esc(C.label(x.k)) + '</span><span class="num">' + eur0(x.c.vincolo) + '</span></span>' +
-          '<small>' + (extra.length ? extra.join(' · ') : 'spese sopra la media') + ' · restano <span' + (x.c.varie < 0 ? ' class="bad"' : '') + '>' + eur0(x.c.varie) + '</span> di spese varie</small></button>';
+        var top = db.voci.filter(function (v) { return v.gruppo !== 'investimento'; })
+          .map(function (v) { return { v: v, extra: C.amt(db, x.k, v) - (+v.importo || 0) }; })
+          .sort(function (a, b) { return b.extra - a.extra; })[0];
+        h += '<button class="tr tr2" data-act="gomonth" data-k="' + x.k + '"><span class="tm">' + mm(x.k) + '</span>' +
+          '<span class="why">' + (top && top.extra > 1 ? esc(top.v.nome) : '') + '</span>' +
+          '<span class="num">' + eur0(x.c.vincolo) + '</span></button>';
       });
       h += '</div></section>';
     }
 
     // ETF
-    var endK = ks[ks.length - 1], nowInv = C.investito(db, cur, true), endInv = C.investito(db, endK, false);
-    var invVoce = db.voci.filter(function (v) { return v.gruppo === 'investimento'; })[0];
+    var endK = ks[ks.length - 1];
     h += '<section class="card"><header><h2>Investito in ETF</h2></header><div class="stats">' +
-      stat('Ad oggi', nowInv, 'investimenti spuntati inclusi') +
-      stat('A ' + C.shortLabel(endK), endInv, invVoce ? 'se continui con ' + eur0(C.amt(db, endK, invVoce)) + ' al mese' : 'secondo il piano') +
-      '</div></section>';
+      stat('Oggi', C.investito(db, cur, true)) + stat('A ' + mm(endK), C.investito(db, endK, false)) + '</div></section>';
     return h;
   }
-  function stat(l, v, s) { return '<div class="stat"><span class="eyebrow">' + esc(l) + '</span><span class="num">' + eur0(v) + '</span><small>' + esc(s) + '</small></div>'; }
+  function stat(l, v, s) { return '<div class="stat"><span class="eyebrow">' + esc(l) + '</span><span class="num">' + eur0(v) + '</span>' + (s ? '<small>' + esc(s) + '</small>' : '') + '</div>'; }
 
   function viewImp() {
     var s = db.settings, h = '';
@@ -729,7 +760,7 @@ html.privacy .t-copy { pointer-events: none; }
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 1.8</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 1.9</p>';
     return h;
   }
 
@@ -946,6 +977,10 @@ html.privacy .t-copy { pointer-events: none; }
   /* ---------------- events ---------------- */
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-act]');
+    if (!t) {
+      var li = e.target.closest('li.row[data-row]');
+      if (li) t = li.querySelector('.check');
+    }
     if (!t) return;
     var a = t.getAttribute('data-act'), id = t.getAttribute('data-id');
     switch (a) {
@@ -990,11 +1025,17 @@ html.privacy .t-copy { pointer-events: none; }
       case 'amex': sheetAmex(); break;
       case 'amexauto': delete ensure(ui.month).amexLimite; save(); closeSheet(); render(); toast('Torno al calcolo automatico'); break;
       case 'spostato': {
-        var ms = ensure(ui.month), cs = C.calc(db, ui.month);
+        var ms = ensure(ui.month), cs = C.calc(db, ui.month), prevSp = ms.spostato ? JSON.parse(JSON.stringify(ms.spostato)) : null;
         var already = ms.spostato && Math.abs(C.r2(cs.spostare - (+ms.spostato.importo || 0))) < 0.5;
-        if (already) { delete ms.spostato; toast('Trasferimento da fare'); }
-        else { ms.spostato = { data: todayISO(), importo: cs.spostare }; toast('Trasferimento segnato come fatto'); }
-        save(); render(); break;
+        var restore = function () { if (prevSp) ms.spostato = prevSp; else delete ms.spostato; save(); render(); };
+        if (already) { delete ms.spostato; save(); render(); toast('Trasferimento di nuovo da fare', { label: 'Annulla', fn: restore }); }
+        else {
+          ms.spostato = { data: todayISO(), importo: cs.spostare };
+          var bar = $bar.querySelector('.transfer');
+          var fin = function () { save(); render(); toast('Spostati ' + eurS(cs.spostare) + ' · archiviato tra i pagati', { label: 'Annulla', fn: restore }); };
+          if (bar && !REDUCED) { bar.classList.add('archiving'); setTimeout(fin, 320); } else fin();
+        }
+        break;
       }
       case 'redditonext': ui.month = C.addM(ui.month, 1); render(); window.scrollTo(0, 0); sheetReddito(); break;
       case 'clearred': ensure(ui.month).reddito = null; save(); closeSheet(); render(); toast('Torno alla stima'); break;
