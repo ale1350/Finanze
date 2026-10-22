@@ -78,6 +78,13 @@ main .wrap { display: grid; gap: 22px; padding-block: 8px 12px; }
 .kpis dd { margin: 0; }
 .kpis dd.num { font-size: 30px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
 .kpis .kpi-sub { font-size: 12px; color: var(--dim); }
+.sv { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.sv > .num { font-size: 30px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
+.amex { border: 0; background: none; padding: 2px 0; color: #B9BCC2; display: inline-flex; align-items: baseline; gap: 3px; white-space: nowrap; }
+.amex .plus { font-family: var(--f-display); font-size: 18px; font-weight: 700; color: var(--dim); }
+.amex .num { font-size: 19px; font-weight: 800; }
+.amex small { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--dim); margin-left: 2px; }
+.amex.manual .num { text-decoration: underline; text-decoration-style: dotted; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .ced { border: 0; background: none; padding: 0; text-align: left; font-size: 13px; font-weight: 600; color: var(--muted); }
 .ced u { color: var(--ink); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .nudge { border: 2px solid var(--line-strong); background: none; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; }
@@ -287,6 +294,16 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     return r2(tot);
   }
 
+  /* Spendibile con AMEX nel mese k: lo paghi il mese dopo, quindi = spese varie di k+1, tra 0 e il tetto (default 500). */
+  function amexDisponibile(db, k) {
+    var m = getM(db, k), s = db.settings || {};
+    var tetto = hasVal(s.amexTetto) ? Math.max(0, +s.amexTetto) : 500;
+    var base = calc(db, addM(k, 1)).varie;
+    var auto = r2(Math.min(tetto, Math.max(0, base)));
+    if (hasVal(m.amexLimite)) return { val: Math.max(0, +m.amexLimite), manuale: true, auto: auto, base: base, tetto: tetto };
+    return { val: auto, manuale: false, auto: auto, base: base, tetto: tetto };
+  }
+
   function slug(s) {
     return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
       .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'voce';
@@ -355,7 +372,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       var ce = get(redditoRow, x.c);
       if (ce && typeof ce.v === 'number') { mesi[x.key].reddito = r2(ce.v); redditi.push(ce.v); }
     });
-    var atteso = null, invBase = 0, invRif = cols[0].key, stime = [null, null, null, null, null, null, null, null, null, null, null, null], eco = wb.Sheets['Economics'];
+    var amexTetto = 500, atteso = null, invBase = 0, invRif = cols[0].key, stime = [null, null, null, null, null, null, null, null, null, null, null, null], eco = wb.Sheets['Economics'];
     if (eco) for (r = 0; r < 60; r++) {
       for (c = 0; c < 4; c++) {
         var t = eco[XLSX.utils.encode_cell({ r: r, c: c })];
@@ -368,6 +385,10 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
           var sv = eco[XLSX.utils.encode_cell({ r: r, c: c + 1 })];
           if (sv && typeof sv.v === 'number') stime[MESI.indexOf(mm[1].toLowerCase())] = r2(sv.v);
         }
+        if (t && /^tetto amex/i.test(String(t.v))) {
+          var tv = eco[XLSX.utils.encode_cell({ r: r, c: c + 1 })];
+          if (tv && typeof tv.v === 'number') amexTetto = r2(tv.v);
+        }
         if (t && /^investito in etf/i.test(String(t.v))) {
           var iv = eco[XLSX.utils.encode_cell({ r: r, c: c + 1 })];
           var ir = eco[XLSX.utils.encode_cell({ r: r, c: c + 2 })];
@@ -377,13 +398,13 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       }
     }
     if (atteso === null) atteso = redditi.length ? r2(redditi.reduce(function (s, v) { return s + v; }, 0) / redditi.length) : 0;
-    return { v: 1, settings: { redditoAtteso: atteso, inizio: cols[0].key, investitoBase: invBase, investitoRif: invRif, stimeCedolino: stime }, voci: voci, mesi: mesi };
+    return { v: 1, settings: { redditoAtteso: atteso, inizio: cols[0].key, investitoBase: invBase, investitoRif: invRif, stimeCedolino: stime, amexTetto: amexTetto }, voci: voci, mesi: mesi };
   }
 
   var api = {
     keyOf: keyOf, parseKey: parseKey, addM: addM, nowKey: nowKey, r2: r2, label: label, shortLabel: shortLabel,
     MESI: MESI, emptyMese: emptyMese, getM: getM, hasVal: hasVal, amt: amt, calc: calc, slug: slug,
-    valid: valid, parseWorkbook: parseWorkbook, investito: investito, stimaCedolino: stimaCedolino
+    valid: valid, parseWorkbook: parseWorkbook, investito: investito, stimaCedolino: stimaCedolino, amexDisponibile: amexDisponibile
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FinCore = api;
 })(typeof window !== 'undefined' ? window : this);
@@ -478,7 +499,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     return '<div class="wrap mhead">' +
       '<button class="navbtn" data-act="prev" aria-label="Mese precedente"' + (k <= startKey() ? ' disabled' : '') + '>' + ICON.left + '</button>' +
       '<h1><span class="mtitle">' + esc(C.label(k)) + '</span>' +
-      (k !== f ? '<button class="mtag link" data-act="oggi">' + esc(tag) + ' · torna a oggi</button>' : '<span class="mtag">' + esc(tag) + '</span>') + '</h1>' +
+      (k !== f ? '<button class="mtag link" data-act="oggi">' + esc(tag) + ' · vai a ' + esc(C.MESI[C.parseKey(f).m - 1]) + '</button>' : '<span class="mtag">' + esc(tag) + '</span>') + '</h1>' +
       '<button class="navbtn" data-act="next" aria-label="Mese successivo">' + ICON.right + '</button></div>';
   }
   function eurS(v) { v = C.r2(v); return Math.abs(v - Math.round(v)) < 0.005 ? eur0(v) : eur(v); }
@@ -493,13 +514,15 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   function viewMese() {
     var k = ui.month, c = C.calc(db, k), m = C.getM(db, k), cur = C.nowKey(), past = k < cur;
     var prevNome = C.MESI[C.parseKey(C.addM(k, -1)).m - 1];
+    var ax = C.amexDisponibile(db, k);
     var h = '';
     // Riepilogo: anello pagamenti + vincolo + spese varie
     h += '<section class="summary">' +
       '<div class="ring">' + ringSVG(c.pct) + '<div class="ring-in"><span class="num">' + Math.round(c.pct * 100) + '%</span><small>pagato</small></div></div>' +
       '<dl class="kpis">' +
       '<div><dt>Vincolo</dt><dd class="num">' + eurS(c.vincolo) + '</dd><dd class="kpi-sub">spese fisse ' + eurS(c.fisse) + '</dd></div>' +
-      '<div><dt>Spese varie</dt><dd class="num' + (c.varie < 0 ? ' bad' : '') + '">' + eurS(c.varie) + '</dd></div>' +
+      '<div><dt>Spese varie</dt><dd class="sv"><span class="num' + (c.varie < 0 ? ' bad' : '') + '">' + eurS(c.varie) + '</span>' +
+      '<button class="amex' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="Spendibile con AMEX: ' + eurS(ax.val) + '. Tocca per modificare"><span class="plus">+</span><span class="num">' + eurS(ax.val) + '</span><small>AMEX</small></button></dd></div>' +
       '</dl></section>';
     h += '<button class="ced" data-act="reddito">' + (c.stima ? 'Cedolino di ' + prevNome + ' stimato · <u>inserisci</u>' : 'Cedolino di ' + prevNome + ' inserito · <u>modifica</u>') + '</button>';
 
@@ -611,6 +634,9 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
         return '<div class="field"><label for="f-st-' + i + '">' + n.slice(0, 3) + '</label><input class="input num" id="f-st-' + i + '" inputmode="decimal" value="' + numStr(st[i]) + '" placeholder="' + numStr(s.redditoAtteso) + '" data-change="stima" data-i="' + i + '"></div>';
       }).join('') + '</div>' +
       '<p class="note">Il vincolo è sempre arrotondato per eccesso a 10 €.</p></section>';
+    h += '<section class="card"><header><h2>AMEX</h2></header>' +
+      '<div class="field"><label for="f-amext">Tetto mensile</label><input class="input num" id="f-amext" inputmode="decimal" value="' + numStr(C.hasVal(s.amexTetto) ? s.amexTetto : 500) + '" data-change="amextetto"></div>' +
+      '<p class="note">Lo spendibile con AMEX di un mese è pari alle spese varie del mese dopo, fino a questo tetto. Puoi cambiarlo mese per mese toccando la cifra accanto alle spese varie.</p></section>';
     h += '<section class="card"><header><h2>ETF</h2></header>' +
       '<div class="field"><label for="f-inv">Già investito (fino a ' + esc(C.label(s.investitoRif || C.nowKey())) + ' incluso)</label><input class="input num" id="f-inv" inputmode="decimal" value="' + numStr(s.investitoBase || 0) + '" data-change="invbase"></div>' +
       '<p class="note">Da qui in poi l\'app aggiunge ogni investimento che spunti. Se aggiorni il totale, vale fino al mese corrente incluso.</p></section>';
@@ -627,7 +653,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 1.3</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 1.4</p>';
     return h;
   }
 
@@ -702,6 +728,24 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       }, 's-red');
   }
 
+  function sheetAmex() {
+    var k = ui.month, ax = C.amexDisponibile(db, k), nxl = C.label(C.addM(k, 1));
+    openSheet('<h3>AMEX · <span style="text-transform:capitalize">' + esc(C.label(k)) + '</span></h3>' +
+      '<p class="note">Quanto puoi spendere con la carta questo mese: lo paghi a ' + esc(nxl) + '. Il calcolo usa le spese varie di ' + esc(nxl) + ' (' + eur(ax.base) + '), al massimo ' + eur0(ax.tetto) + ' e mai sotto 0.</p>' +
+      '<div class="field"><label for="s-amex">Spendibile con AMEX</label><input class="input input-big" id="s-amex" inputmode="decimal" value="' + numStr(ax.val) + '" autocomplete="off"></div>' +
+      (ax.manuale ? '<p class="note">Valore inserito a mano. Calcolo automatico: ' + eur(ax.auto) + '.</p>' : '') +
+      ERR + ACTIONS('Salva', ax.manuale ? '<button type="button" class="btn btn-block" data-act="amexauto">Torna al calcolo automatico</button>' : ''),
+      function () {
+        var n = parseNum(document.getElementById('s-amex').value);
+        if (!isFinite(n)) return showErr('Scrivi un importo, per esempio 650.');
+        if (n < 0) return showErr('Non può essere negativo: il minimo è 0.');
+        n = C.r2(n);
+        var mm = ensure(k);
+        if (Math.abs(n - ax.auto) < 0.005) delete mm.amexLimite; else mm.amexLimite = n;
+        save(); closeSheet(); render(); toast('AMEX aggiornato');
+      }, 's-amex');
+  }
+
   function sheetVoce(id) {
     var v = id ? voce(id) : null;
     openSheet('<h3>' + (v ? 'Modifica voce' : 'Nuova voce') + '</h3>' +
@@ -773,7 +817,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
     return d;
   }
   function replaceData(d, msg) {
-    var go = function () { db = d; save(); ui.month = C.nowKey(); ui.tab = 'mese'; closeSheet(); render(); toast(msg); };
+    var go = function () { db = d; save(); ui.month = focusMonth(); ui.tab = 'mese'; closeSheet(); render(); toast(msg); };
     if (db) sheetConfirm('Sostituire i dati attuali?', 'I dati presenti su questo dispositivo verranno sostituiti con quelli importati.', 'Sostituisci', go);
     else go();
   }
@@ -819,7 +863,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   }
 
   function blankDb() {
-    var vs = [['Mutuo', 'Credit Agricole', 'fisse'], ['Assic. Casa', 'Credit Agricole', 'fisse'], ['Wi-Fi', 'Credit Agricole', 'fisse'], ['Bollette', 'Credit Agricole', 'fisse'], ['TARI', 'Credit Agricole', 'fisse'], ['Spese condominiali', 'Credit Agricole', 'fisse'], ['Accantonamento', 'Credit Agricole', 'fisse'], ['Telefono', 'Credit Agricole', 'fisse'], ['Carta di credito', 'Carta', 'carta'], ['Investimento ETF', 'Trade ETF', 'investimento']];
+    var vs = [['Mutuo', 'Credit Agricole', 'fisse'], ['Assic. Casa', 'Credit Agricole', 'fisse'], ['Wi-Fi', 'Credit Agricole', 'fisse'], ['Bollette', 'Credit Agricole', 'fisse'], ['TARI', 'Credit Agricole', 'fisse'], ['Spese condominiali', 'Credit Agricole', 'fisse'], ['Accantonamento', 'Credit Agricole', 'fisse'], ['Telefono', 'Credit Agricole', 'fisse'], ['AMEX (T-1)', 'Amex', 'carta'], ['Investimento ETF', 'Trade ETF', 'investimento']];
     return { v: 1, settings: { redditoAtteso: 0, arrot: 10, inizio: C.nowKey() }, voci: vs.map(function (x) { return { id: C.slug(x[0]), nome: x[0], conto: x[1], gruppo: x[2], importo: 0, stima: x[0] === 'Bollette' }; }), mesi: {} };
   }
 
@@ -842,6 +886,8 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       }
       case 'amt': sheetAmt(id); break;
       case 'reddito': sheetReddito(); break;
+      case 'amex': sheetAmex(); break;
+      case 'amexauto': delete ensure(ui.month).amexLimite; save(); closeSheet(); render(); toast('Torno al calcolo automatico'); break;
       case 'spostato': {
         var ms = ensure(ui.month), cs = C.calc(db, ui.month);
         var already = ms.spostato && Math.abs(C.r2(cs.spostare - (+ms.spostato.importo || 0))) < 0.5;
@@ -891,6 +937,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
         db.settings.stimeCedolino[si] = sn === null ? null : C.r2(sn); save(); toast('Stima di ' + C.MESI[si] + ' aggiornata');
       } else { toast('Importo non valido'); t.value = numStr((db.settings.stimeCedolino || [])[si]); }
     }
+    else if (w === 'amextetto') { var at = parseNum(t.value); if (isFinite(at) && at >= 0) { db.settings.amexTetto = C.r2(at); save(); toast('Tetto AMEX aggiornato'); } else { toast('Importo non valido'); t.value = numStr(C.hasVal(db.settings.amexTetto) ? db.settings.amexTetto : 500); } }
     else if (w === 'invbase') { var iv = parseNum(t.value); if (isFinite(iv) && iv >= 0) { db.settings.investitoBase = C.r2(iv); db.settings.investitoRif = C.nowKey(); save(); render(); toast('Totale investito aggiornato'); } else { toast('Importo non valido'); t.value = numStr(db.settings.investitoBase || 0); } }
     else if (w === 'arrot') { db.settings.arrot = +t.value; save(); toast('Arrotondamento aggiornato'); }
   });
@@ -913,7 +960,12 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   if (db && db.settings && db.settings.investitoBase === undefined && window.FIN_SEED && window.FIN_SEED.settings) { db.settings.investitoBase = window.FIN_SEED.settings.investitoBase || 0; db.settings.investitoRif = window.FIN_SEED.settings.investitoRif; save(); }
   if (!db && window.FIN_SEED && C.valid(window.FIN_SEED)) { db = JSON.parse(JSON.stringify(window.FIN_SEED)); save(); }
   if (db && db.settings && !Array.isArray(db.settings.stimeCedolino) && window.FIN_SEED && window.FIN_SEED.settings && window.FIN_SEED.settings.stimeCedolino) { db.settings.stimeCedolino = window.FIN_SEED.settings.stimeCedolino.slice(); save(); }
-  if (db) ui.month = focusMonth();
+  if (db) {
+    var ren = false;
+    db.voci.forEach(function (v) { if (/^pagamenti amex \(t-1\)$/i.test(v.nome)) { v.nome = 'AMEX (T-1)'; ren = true; } });
+    if (ren) save();
+    ui.month = focusMonth();
+  }
   render();
 
   if (window.FIN_PWA) {
