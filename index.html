@@ -1110,7 +1110,7 @@ span.ced { cursor: default; }
   }
 
   function blankDb() {
-    var vs = [['Mutuo', 'Credit Agricole', 'fisse'], ['Assic. Casa', 'Credit Agricole', 'fisse'], ['Wi-Fi', 'Credit Agricole', 'fisse'], ['Bollette', 'Credit Agricole', 'fisse'], ['TARI', 'Credit Agricole', 'fisse'], ['Spese condominiali', 'Credit Agricole', 'fisse'], ['Accantonamento', 'Credit Agricole', 'fisse'], ['Telefono', 'Credit Agricole', 'fisse'], ['AMEX (T-1)', 'Amex', 'carta'], ['Investimento ETF', 'Trade ETF', 'investimento']];
+    var vs = [['Mutuo', 'Credit Agricole', 'fisse'], ['Assic. Casa', 'Credit Agricole', 'fisse'], ['Wi-Fi', 'Credit Agricole', 'fisse'], ['Bollette', 'Credit Agricole', 'fisse'], ['TARI', 'Credit Agricole', 'fisse'], ['Spese condominiali', 'Credit Agricole', 'fisse'], ['Accantonamento', 'Credit Agricole', 'fisse'], ['Telefono', 'Credit Agricole', 'fisse'], ['AMEX (t-1)', 'Amex', 'carta'], ['Investimento ETF', 'Trade ETF', 'investimento']];
     return { v: 1, settings: { redditoAtteso: 0, arrot: 10, inizio: C.nowKey() }, voci: vs.map(function (x) { return { id: C.slug(x[0]), nome: x[0], conto: x[1], gruppo: x[2], importo: 0, stima: x[0] === 'Bollette' }; }), mesi: {} };
   }
 
@@ -1291,7 +1291,7 @@ span.ced { cursor: default; }
   if (db && db.settings && !Array.isArray(db.settings.stimeCedolino) && window.FIN_SEED && window.FIN_SEED.settings && window.FIN_SEED.settings.stimeCedolino) { db.settings.stimeCedolino = window.FIN_SEED.settings.stimeCedolino.slice(); save(); }
   if (db) {
     var ren = false;
-    db.voci.forEach(function (v) { if (/^pagamenti amex \(t-1\)$/i.test(v.nome)) { v.nome = 'AMEX (T-1)'; ren = true; } });
+    db.voci.forEach(function (v) { if (/^pagamenti amex \(t-1\)$/i.test(v.nome)) { v.nome = 'AMEX (t-1)'; ren = true; } });
     if (ren) save();
     ui.month = focusMonth();
   }
