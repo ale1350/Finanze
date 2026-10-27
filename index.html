@@ -286,6 +286,11 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 
+.stats2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1.5px solid var(--line); padding-top: 14px; }
+.stats2 .stat .num { font-size: 20px; }
+.num.big2 { font-size: 34px; font-weight: 800; letter-spacing: -.01em; }
+span.ced { cursor: default; }
+
 </style>
 </head>
 <body>
@@ -659,7 +664,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 
     // ---- cedolino + occhio
     var priv = document.documentElement.classList.contains('privacy');
-    h += '<div class="cedrow"><button class="ced" data-act="reddito">' + (c.stima ? 'Cedolino di ' + prevNome + ' stimato · <u>inserisci</u>' : 'Cedolino di ' + prevNome + ' inserito · <u>modifica</u>') + '</button>' +
+    h += '<div class="cedrow">' + (c.stima ? '<button class="ced" data-act="reddito">Cedolino di ' + prevNome + ' stimato · <u>inserisci</u></button>' : '<span class="ced">Cedolino di ' + prevNome + ' inserito</span>') +
       '<button class="eye" data-act="privacy" aria-pressed="' + priv + '" aria-label="' + (priv ? 'Mostra gli importi' : 'Nascondi gli importi') + '">' + (priv ? ICON.eyeoff : ICON.eye) + '</button></div>';
     var nx = C.addM(k, 1);
     if (k === cur && new Date().getDate() >= 20 && !C.hasVal(C.getM(db, nx).reddito)) {
@@ -747,43 +752,33 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       h += '<p class="sub">Scrivi qui il valore del portafoglio che vedi su Trade Republic: l\'app calcola guadagno o perdita rispetto a quanto hai investito.</p>';
     }
     h += '<button class="btn btn-block" data-act="etfval">' + ICON.plus + 'Aggiorna il valore di oggi</button>' +
-      '<div class="stats3">' + stat('Investito', invNow) + '<div class="stat"><span class="eyebrow">Piano</span><span class="num">' + (invVoce ? eur0(C.amt(db, cur, invVoce)) : '–') + '/m</span></div>' + stat('A ' + mm(endK), C.investito(db, endK, false)) + '</div></section>';
+      '<div class="stats2">' + stat('Investito', invNow) + '<div class="stat"><span class="eyebrow">Piano mensile</span><span class="num">' + (invVoce ? eur0(C.amt(db, cur, invVoce)) : '–') + '</span></div></div></section>';
 
     // ---- Media mensile
-    var sumF = 0, sumV = 0;
-    ks.forEach(function (k) { var c = C.calc(db, k); sumF += c.fisse; sumV += c.vincolo; });
+    var sumF = 0;
+    ks.forEach(function (k) { sumF += C.calc(db, k).fisse; });
     var nk = Math.max(ks.length, 1);
-    h += '<section class="card"><header><h2>Media mensile</h2><span class="count">' + mm(ks[0]) + ' → ' + mm(ks[ks.length - 1]) + '</span></header><div class="stats">' +
-      stat('Spese fisse', sumF / nk) + stat('Vincolo', sumV / nk) + '</div></section>';
+    h += '<section class="card"><header><h2>Spese fisse</h2><span class="count">media ' + mm(ks[0]) + ' → ' + mm(ks[ks.length - 1]) + '</span></header>' +
+      '<div class="stat"><span class="num big2">' + eur0(sumF / nk) + '</span><small>al mese</small></div></section>';
 
     // ---- Mesi pesanti
-    var avg = sumV / nk;
+    var avg = sumF / nk;
     var heavy = ks.filter(function (k) { return k > cur; }).map(function (k) { return { k: k, c: C.calc(db, k) }; })
-      .filter(function (x) { return x.c.vincolo > avg * 1.08; }).sort(function (a, b) { return b.c.vincolo - a.c.vincolo; }).slice(0, 3)
+      .filter(function (x) { return x.c.fisse > avg * 1.08; }).sort(function (a, b) { return b.c.fisse - a.c.fisse; }).slice(0, 3)
       .sort(function (a, b) { return a.k < b.k ? -1 : 1; });
     if (heavy.length) {
-      h += '<section class="card"><header><h2>Mesi pesanti</h2><span class="count">vincolo sopra la media</span></header><div class="tbl">';
+      h += '<section class="card"><header><h2>Mesi pesanti</h2><span class="count">spese fisse sopra la media</span></header><div class="tbl">';
       heavy.forEach(function (x) {
         var top = db.voci.filter(function (v) { return v.gruppo !== 'investimento'; })
           .map(function (v) { return { v: v, extra: C.amt(db, x.k, v) - (+v.importo || 0) }; })
           .sort(function (a, b) { return b.extra - a.extra; })[0];
         h += '<button class="tr tr2" data-act="gomonth" data-k="' + x.k + '"><span class="tm">' + mm(x.k) + '</span>' +
           '<span class="why">' + (top && top.extra > 1 ? esc(top.v.nome) : '') + '</span>' +
-          '<span class="num">' + eur0(x.c.vincolo) + '</span></button>';
+          '<span class="num">' + eur0(x.c.fisse) + '</span></button>';
       });
       h += '</div></section>';
     }
 
-    // ---- Prossimi 3 mesi
-    h += '<section class="card"><header><h2>Prossimi 3 mesi</h2></header><div class="tbl" role="table">' +
-      '<div class="tr th" role="row"><span role="columnheader"></span><span role="columnheader">Fisse</span><span role="columnheader">Vincolo</span><span role="columnheader">Varie</span></div>';
-    [1, 2, 3].forEach(function (n) {
-      var k = C.addM(cur, n), c = C.calc(db, k);
-      h += '<button class="tr" role="row" data-act="gomonth" data-k="' + k + '"><span class="tm">' + mm(k) + '</span>' +
-        '<span class="num">' + eur0(c.fisse) + '</span><span class="num">' + eur0(c.vincolo) + '</span>' +
-        '<span class="num' + (c.varie < 0 ? ' bad' : '') + (c.stima ? ' est' : '') + '">' + eur0(c.varie) + '</span></button>';
-    });
-    h += '</div><p class="note">In corsivo: calcolato su un cedolino stimato.</p></section>';
     return h;
   }
 
@@ -846,6 +841,18 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
   function viewImp() {
     var s = db.settings, h = '';
     var st = s.stimeCedolino || [];
+    var ced = keys().filter(function (k) { return C.hasVal(C.getM(db, k).reddito); }).reverse();
+    h += '<section class="card"><header><h2>Cedolini inseriti</h2></header>';
+    if (!ced.length) h += '<p class="note">Nessun cedolino inserito. Lo inserisci dalla home quando arriva: da lì in poi lo modifichi solo qui.</p>';
+    else {
+      h += '<ul class="list">';
+      ced.forEach(function (k) {
+        var pk = C.addM(k, -1);
+        h += '<li><button class="setrow" data-act="editced" data-k="' + k + '"><span class="row-main"><span class="name" style="text-transform:capitalize">' + esc(C.label(pk)) + '</span><span class="meta"><span>finanzia ' + esc(C.label(k)) + '</span></span></span><span class="num">' + eur(C.getM(db, k).reddito) + '</span>' + ICON.chev + '</button></li>';
+      });
+      h += '</ul>';
+    }
+    h += '</section>';
     h += '<section class="card"><header><h2>Stima cedolini</h2></header>' +
       '<p class="note">Usate finché non inserisci il cedolino vero. Il cedolino di un mese finanzia il mese dopo: quello di dicembre vale per le spese di gennaio.</p>' +
       '<div class="months">' + C.MESI.map(function (n, i) {
@@ -868,7 +875,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 2.0</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 2.1</p>';
     return h;
   }
 
@@ -926,12 +933,12 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
       }, 's-amt');
   }
 
-  function sheetReddito() {
-    var k = ui.month, m = C.getM(db, k), has = C.hasVal(m.reddito), prev = C.label(C.addM(k, -1)), nome = C.MESI[C.parseKey(C.addM(k, -1)).m - 1];
+  function sheetReddito(kArg) {
+    var k = kArg || ui.month, m = C.getM(db, k), has = C.hasVal(m.reddito), prev = C.label(C.addM(k, -1)), nome = C.MESI[C.parseKey(C.addM(k, -1)).m - 1];
     openSheet('<h3>Cedolino di <span style="text-transform:capitalize">' + esc(prev) + '</span></h3>' +
       '<p class="note">È lo stipendio che finanzia le spese di ' + esc(C.label(k)) + '. ' + (has ? 'Netto già inserito.' : 'Per ora il calcolo usa la stima di ' + eur(C.stimaCedolino(db, k)) + '.') + '</p>' +
       '<div class="field"><label for="s-red">Netto in busta paga di ' + esc(nome) + '</label><input class="input input-big" id="s-red" inputmode="decimal" value="' + (has ? numStr(m.reddito) : '') + '" placeholder="' + numStr(C.stimaCedolino(db, k)) + '" autocomplete="off"></div>' +
-      ERR + ACTIONS('Salva', has ? '<button type="button" class="btn btn-block" data-act="clearred">Torna alla stima</button>' : ''),
+      ERR + ACTIONS('Salva', has ? '<button type="button" class="btn btn-block" data-act="clearred" data-k="' + k + '">Torna alla stima</button>' : ''),
       function () {
         var n = parseNum(document.getElementById('s-red').value);
         if (!isFinite(n) || n < 0) return showErr('Scrivi il netto del cedolino, per esempio 2105.');
@@ -1168,7 +1175,8 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
         break;
       }
       case 'redditonext': ui.month = C.addM(ui.month, 1); render(); window.scrollTo(0, 0); sheetReddito(); break;
-      case 'clearred': ensure(ui.month).reddito = null; save(); closeSheet(); render(); toast('Torno alla stima'); break;
+      case 'editced': sheetReddito(t.getAttribute('data-k')); break;
+      case 'clearred': ensure(t.getAttribute('data-k') || ui.month).reddito = null; save(); closeSheet(); render(); toast('Torno alla stima'); break;
       case 'newvoce': sheetVoce(null); break;
       case 'editvoce': sheetVoce(id); break;
       case 'delvoce': closeSheet(); setTimeout(function () {
