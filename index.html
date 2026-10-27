@@ -291,6 +291,13 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 .num.big2 { font-size: 34px; font-weight: 800; letter-spacing: -.01em; }
 span.ced { cursor: default; }
 
+/* v2.2: occhio accanto al vincolo */
+.ca-head { align-items: center; }
+.ca-right { display: flex; align-items: center; gap: 10px; }
+.ca .eye { width: 32px; height: 32px; border-width: 1.5px; }
+.ca .eye svg { width: 16px; height: 16px; }
+.cedrow { margin-top: -6px; }
+
 </style>
 </head>
 <body>
@@ -501,8 +508,9 @@ span.ced { cursor: default; }
   var TAB_KEY = 'finanze-ale-tab';
   var fmt = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
   var fmt0 = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0, minimumFractionDigits: 0 });
-  var eur = function (v) { return fmt.format(C.r2(v)); };
-  var eur0 = function (v) { return fmt0.format(Math.round(v)); };
+  var grp = function (n) { return n.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
+  var eur = function (v) { v = C.r2(v); var p = Math.abs(v).toFixed(2).split('.'); return (v < 0 ? '-' : '') + grp(p[0]) + ',' + p[1] + '\u00a0€'; };
+  var eur0 = function (v) { var r = Math.round(v); return (r < 0 ? '-' : '') + grp(String(Math.abs(r))) + '\u00a0€'; };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var GRUPPI = { fisse: 'Spese fisse', carta: 'Carta di credito', investimento: 'Investimento' };
   var ICON = {
@@ -664,8 +672,7 @@ span.ced { cursor: default; }
 
     // ---- cedolino + occhio
     var priv = document.documentElement.classList.contains('privacy');
-    h += '<div class="cedrow">' + (c.stima ? '<button class="ced" data-act="reddito">Cedolino di ' + prevNome + ' stimato · <u>inserisci</u></button>' : '<span class="ced">Cedolino di ' + prevNome + ' inserito</span>') +
-      '<button class="eye" data-act="privacy" aria-pressed="' + priv + '" aria-label="' + (priv ? 'Mostra gli importi' : 'Nascondi gli importi') + '">' + (priv ? ICON.eyeoff : ICON.eye) + '</button></div>';
+    if (c.stima) h += '<div class="cedrow"><button class="ced" data-act="reddito">Cedolino di ' + prevNome + ' stimato · <u>inserisci</u></button></div>';
     var nx = C.addM(k, 1);
     if (k === cur && new Date().getDate() >= 20 && !C.hasVal(C.getM(db, nx).reddito)) {
       h += '<button class="nudge" data-act="redditonext"><span><b>Arrivato il cedolino di ' + nomeK + '?</b><small>Inseriscilo: decide quanto spostare a ' + nomeNx + '.</small></span>' + ICON.chev + '</button>';
@@ -673,7 +680,8 @@ span.ced { cursor: default; }
 
     // ---- Credit Agricole: vincolo e avanzamento delle spese fisse
     h += '<section class="ca' + (c.pctF >= 0.999 ? ' full' : '') + (ui.celebrate ? ' celebrate' : '') + '">' +
-      '<div class="ca-head"><span class="ca-lab"><i class="ca-dot"></i>Credit Agricole · vincolo</span><span class="num ca-val" data-count="vin" data-val="' + c.vincolo + '" data-fmt="s">' + eurS(c.vincolo) + '</span></div>' +
+      '<div class="ca-head"><span class="ca-lab"><i class="ca-dot"></i>Credit Agricole · vincolo</span><span class="ca-right"><span class="num ca-val" data-count="vin" data-val="' + c.vincolo + '" data-fmt="s">' + eurS(c.vincolo) + '</span>' +
+      '<button class="eye" data-act="privacy" aria-pressed="' + priv + '" aria-label="' + (priv ? 'Mostra gli importi' : 'Nascondi gli importi') + '">' + (priv ? ICON.eyeoff : ICON.eye) + '</button></span></div>' +
       '<div class="ca-bar"><span data-w="' + (c.pctF * 100).toFixed(1) + '" style="width:' + (ui.prev.bar !== undefined && !REDUCED ? ui.prev.bar : (REDUCED ? c.pctF * 100 : 0)).toFixed(1) + '%"></span></div>' +
       '<span class="ca-sub">' + (c.daPagareF > 0.005 ? 'pagato ' + eurS(c.pagF) + ' · mancano ' + eurS(c.daPagareF) + ' di spese fisse' : (c.fisse > 0 ? 'spese fisse di ' + nomeK + ' tutte pagate' : 'nessuna spesa fissa')) + '</span></section>';
 
@@ -806,7 +814,7 @@ span.ced { cursor: default; }
     var s = '<div class="chart-wrap"><svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Valore del portafoglio e capitale investito nel tempo">';
     for (var g = y0; g <= y1 + 0.001; g += step) {
       s += '<line x1="' + L + '" x2="' + (W - R + 8) + '" y1="' + y(g).toFixed(1) + '" y2="' + y(g).toFixed(1) + '" class="grid"/>' +
-        '<text x="' + W + '" y="' + (y(g) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt0.format(g) + '</text>';
+        '<text x="' + W + '" y="' + (y(g) + 3.5).toFixed(1) + '" text-anchor="end">' + eur0(g) + '</text>';
     }
     var inv = pts.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.inv).toFixed(1); }).join(' ');
     var val = pts.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); }).join(' ');
@@ -875,7 +883,7 @@ span.ced { cursor: default; }
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 2.1</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 2.2</p>';
     return h;
   }
 
