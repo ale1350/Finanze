@@ -763,26 +763,28 @@ span.ced { cursor: default; }
       '<div class="stats2">' + stat('Investito', invNow) + '<div class="stat"><span class="eyebrow">Piano mensile</span><span class="num">' + (invVoce ? eur0(C.amt(db, cur, invVoce)) : '–') + '</span></div></div></section>';
 
     // ---- Media mensile
+    /* spese fisse "strutturali": escluse la carta (AMEX) e l'investimento */
+    var fisseStr = function (k) { return db.voci.reduce(function (t, v) { return t + ((v.gruppo || 'fisse') === 'fisse' ? C.amt(db, k, v) : 0); }, 0); };
     var sumF = 0;
-    ks.forEach(function (k) { sumF += C.calc(db, k).fisse; });
+    ks.forEach(function (k) { sumF += fisseStr(k); });
     var nk = Math.max(ks.length, 1);
     h += '<section class="card"><header><h2>Spese fisse</h2><span class="count">media ' + mm(ks[0]) + ' → ' + mm(ks[ks.length - 1]) + '</span></header>' +
-      '<div class="stat"><span class="num big2">' + eur0(sumF / nk) + '</span><small>al mese</small></div></section>';
+      '<div class="stat"><span class="num big2">' + eur0(sumF / nk) + '</span><small>al mese · AMEX esclusa</small></div></section>';
 
     // ---- Mesi pesanti
     var avg = sumF / nk;
-    var heavy = ks.filter(function (k) { return k > cur; }).map(function (k) { return { k: k, c: C.calc(db, k) }; })
-      .filter(function (x) { return x.c.fisse > avg * 1.08; }).sort(function (a, b) { return b.c.fisse - a.c.fisse; }).slice(0, 3)
+    var heavy = ks.filter(function (k) { return k > cur; }).map(function (k) { return { k: k, f: fisseStr(k) }; })
+      .filter(function (x) { return x.f > avg * 1.08; }).sort(function (a, b) { return b.f - a.f; }).slice(0, 3)
       .sort(function (a, b) { return a.k < b.k ? -1 : 1; });
     if (heavy.length) {
       h += '<section class="card"><header><h2>Mesi pesanti</h2><span class="count">spese fisse sopra la media</span></header><div class="tbl">';
       heavy.forEach(function (x) {
-        var top = db.voci.filter(function (v) { return v.gruppo !== 'investimento'; })
+        var top = db.voci.filter(function (v) { return (v.gruppo || 'fisse') === 'fisse'; })
           .map(function (v) { return { v: v, extra: C.amt(db, x.k, v) - (+v.importo || 0) }; })
           .sort(function (a, b) { return b.extra - a.extra; })[0];
         h += '<button class="tr tr2" data-act="gomonth" data-k="' + x.k + '"><span class="tm">' + mm(x.k) + '</span>' +
           '<span class="why">' + (top && top.extra > 1 ? esc(top.v.nome) : '') + '</span>' +
-          '<span class="num">' + eur0(x.c.fisse) + '</span></button>';
+          '<span class="num">' + eur0(x.f) + '</span></button>';
       });
       h += '</div></section>';
     }
@@ -883,7 +885,7 @@ span.ced { cursor: default; }
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 2.2</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 2.3</p>';
     return h;
   }
 
@@ -1110,7 +1112,7 @@ span.ced { cursor: default; }
   }
 
   function blankDb() {
-    var vs = [['Mutuo', 'Credit Agricole', 'fisse'], ['Assic. Casa', 'Credit Agricole', 'fisse'], ['Wi-Fi', 'Credit Agricole', 'fisse'], ['Bollette', 'Credit Agricole', 'fisse'], ['TARI', 'Credit Agricole', 'fisse'], ['Spese condominiali', 'Credit Agricole', 'fisse'], ['Accantonamento', 'Credit Agricole', 'fisse'], ['Telefono', 'Credit Agricole', 'fisse'], ['AMEX (t-1)', 'Amex', 'carta'], ['Investimento ETF', 'Trade ETF', 'investimento']];
+    var vs = [['Mutuo', 'Credit Agricole', 'fisse'], ['Assic. Casa', 'Credit Agricole', 'fisse'], ['Wi-Fi', 'Credit Agricole', 'fisse'], ['Bollette', 'Credit Agricole', 'fisse'], ['TARI', 'Credit Agricole', 'fisse'], ['Spese condominiali', 'Credit Agricole', 'fisse'], ['Accantonamento', 'Credit Agricole', 'fisse'], ['Telefono', 'Credit Agricole', 'fisse'], ['AMEX (T-1)', 'Amex', 'carta'], ['Investimento ETF', 'Trade ETF', 'investimento']];
     return { v: 1, settings: { redditoAtteso: 0, arrot: 10, inizio: C.nowKey() }, voci: vs.map(function (x) { return { id: C.slug(x[0]), nome: x[0], conto: x[1], gruppo: x[2], importo: 0, stima: x[0] === 'Bollette' }; }), mesi: {} };
   }
 
@@ -1291,7 +1293,7 @@ span.ced { cursor: default; }
   if (db && db.settings && !Array.isArray(db.settings.stimeCedolino) && window.FIN_SEED && window.FIN_SEED.settings && window.FIN_SEED.settings.stimeCedolino) { db.settings.stimeCedolino = window.FIN_SEED.settings.stimeCedolino.slice(); save(); }
   if (db) {
     var ren = false;
-    db.voci.forEach(function (v) { if (/^pagamenti amex \(t-1\)$/i.test(v.nome)) { v.nome = 'AMEX (t-1)'; ren = true; } });
+    db.voci.forEach(function (v) { if (/^pagamenti amex \(t-1\)$/i.test(v.nome)) { v.nome = 'AMEX (T-1)'; ren = true; } });
     if (ren) save();
     ui.month = focusMonth();
   }
