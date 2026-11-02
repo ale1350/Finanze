@@ -6,9 +6,9 @@
 <title>Finanze</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finanze">
-<meta name="theme-color" content="#EEEFF1">
+<meta name="theme-color" content="#0B0C0E">
 <meta name="robots" content="noindex">
 <style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -18,28 +18,28 @@
 <style>
 /* Layout: tre pagine affiancate da scorrere (Mese · Andamento · Impostazioni), nessun menu in basso.
    Mese: carte impilate (Trade Republic / AMEX), blocco Credit Agricole con il vincolo, timeline delle scadenze.
-   Tema grigio chiaro; il colore lo portano i conti: Trade nero, AMEX verde, Credit Agricole petrolio. */
+   Tema scuro (Notte); il colore lo portano i conti: Trade grafite, AMEX verde, Credit Agricole petrolio. */
 :root {
-  color-scheme: light;
-  --bg: #EEEFF1;
-  --surface: #FFFFFF;
-  --surface-2: #E4E6EA;
-  --ink: #17181B;
-  --muted: #6B7079;
-  --dim: #7C818A;
-  --line: #D9DCE1;
-  --line-strong: #B5BAC2;
-  --ok: #2E9461;
+  color-scheme: dark;
+  --bg: #0B0C0E;
+  --surface: #16171A;
+  --surface-2: #1E2024;
+  --ink: #F2F3F5;
+  --muted: #8C919A;
+  --dim: #6E737C;
+  --line: #24262B;
+  --line-strong: #3A3D44;
+  --ok: #34A56C;
   --ok-ink: #FFFFFF;
-  --bad: #C2412F;
+  --bad: #E8634F;
   --bad-on-dark: #FF9B8E;
-  --trade: #17181B;
+  --trade: #23252A;
   --trade-ink: #F3F3F1;
-  --trade-muted: #A3A7AE;
-  --amex: #557760;
+  --trade-muted: #9EA3AB;
+  --amex: #4C6B57;
   --amex-ink: #E6F0E8;
-  --amex-muted: #C3D6C8;
-  --ca: #0E6F7A;
+  --amex-muted: #BBD0C1;
+  --ca: #1E95A3;
   --f-display: "Archivo", "SF Pro Display", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -82,7 +82,7 @@ body.welcome-mode .page:not(#pg-mese) { display: none; }
 /* ---- carte ---- */
 .stack { position: relative; height: 262px; }
 .card-back { position: absolute; left: 8px; right: 8px; top: 0; height: 200px; border: 0; border-radius: 22px; padding: 15px 18px; display: flex; justify-content: space-between; align-items: flex-start; text-align: left; }
-.card-front { position: absolute; left: 0; right: 0; top: 50px; height: 212px; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 -10px 30px rgba(20, 24, 30, .22); }
+.card-front { position: absolute; left: 0; right: 0; top: 50px; height: 212px; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 -10px 30px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06); }
 .card-back.trade, .card-front.trade { background: var(--trade); color: var(--trade-ink); }
 .card-back.amex, .card-front.amex { background: var(--amex); color: var(--amex-ink); }
 .cname { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding-top: 2px; }
@@ -255,7 +255,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 .btn-danger { border-color: var(--bad); color: var(--bad); }
 .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 99px; }
 .btn-block { width: 100%; }
-.scrim { position: fixed; inset: 0; background: rgba(20, 24, 30, .4); z-index: 40; opacity: 0; transition: opacity .2s; }
+.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .6); z-index: 40; opacity: 0; transition: opacity .2s; }
 .scrim.on { opacity: 1; }
 .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; transform: translateY(105%); transition: transform .28s cubic-bezier(.2, .9, .2, 1); }
 .sheet.on { transform: none; }
@@ -268,7 +268,7 @@ textarea.input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; m
 .toast { display: flex; align-items: center; gap: 14px; position: fixed; left: 50%; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity .2s, transform .2s; z-index: 60; pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .toast.has-action.on { pointer-events: auto; }
-.toast-btn { border: 0; background: none; color: #7FD3A6; font-weight: 800; padding: 4px 2px; text-transform: uppercase; font-size: 12.5px; letter-spacing: .06em; }
+.toast-btn { border: 0; background: none; color: #1F7A4D; font-weight: 800; padding: 4px 2px; text-transform: uppercase; font-size: 12.5px; letter-spacing: .06em; }
 
 /* ---- benvenuto ---- */
 .welcome { display: grid; gap: 18px; padding-block: 36px 40px; }
@@ -297,6 +297,14 @@ span.ced { cursor: default; }
 .ca .eye { width: 32px; height: 32px; border-width: 1.5px; }
 .ca .eye svg { width: 16px; height: 16px; }
 .cedrow { margin-top: -6px; }
+
+/* v2.6: tema Notte */
+.tline.empty::before { display: none; }
+.card-back { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05); }
+.card { border: 1px solid #1D1F23; }
+.sheet .panel { border-top: 1px solid var(--line-strong); }
+.btn-primary { background: var(--ink); color: #0B0C0E; }
+input[type="date"].input { min-height: 50px; -webkit-appearance: none; appearance: none; }
 
 </style>
 </head>
@@ -382,7 +390,12 @@ span.ced { cursor: default; }
         tot += amt(db, k, v);
       });
     });
-    return r2(tot);
+    return r2(tot + extraFino(db, uptoK));
+  }
+
+  /* Investimenti extra (inseriti a mano in Impostazioni) fino al mese k incluso */
+  function extraFino(db, k) {
+    return ((db.settings || {}).extra || []).reduce(function (t, e) { return t + (String(e.data).slice(0, 7) <= k ? (+e.importo || 0) : 0); }, 0);
   }
 
   /* Spendibile con AMEX nel mese k: lo paghi il mese dopo, quindi = spese varie di k+1 (mai sotto 0). */
@@ -494,7 +507,7 @@ span.ced { cursor: default; }
   var api = {
     keyOf: keyOf, parseKey: parseKey, addM: addM, nowKey: nowKey, r2: r2, label: label, shortLabel: shortLabel,
     MESI: MESI, emptyMese: emptyMese, getM: getM, hasVal: hasVal, amt: amt, calc: calc, slug: slug,
-    valid: valid, parseWorkbook: parseWorkbook, investito: investito, stimaCedolino: stimaCedolino, amexDisponibile: amexDisponibile
+    valid: valid, parseWorkbook: parseWorkbook, investito: investito, extraFino: extraFino, stimaCedolino: stimaCedolino, amexDisponibile: amexDisponibile
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FinCore = api;
 })(typeof window !== 'undefined' ? window : this);
@@ -620,11 +633,11 @@ span.ced { cursor: default; }
   function topMese() {
     var k = ui.month, cur = C.nowKey(), f = focusMonth();
     var dl = (function () { var d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - d.getDate(); })();
-    var tag = k === cur ? 'questo mese' + (dl > 0 ? ' · ' + dl + (dl === 1 ? ' giorno' : ' giorni') + ' alla fine' : ' · ultimo giorno') : (k < cur ? 'mese passato' : (k === C.addM(cur, 1) && fisseSaldate(cur) ? C.MESI[C.parseKey(cur).m - 1] + ' saldato' : 'in arrivo'));
+    var tag = k === cur ? (dl > 0 ? dl + (dl === 1 ? ' giorno' : ' giorni') + ' alla fine' : 'ultimo giorno') : '';
     return '<div class="wrap mhead">' +
       '<button class="navbtn" data-act="prev" aria-label="Mese precedente"' + (k <= startKey() ? ' disabled' : '') + '>' + ICON.left + '</button>' +
       '<h1><span class="mtitle">' + esc(C.label(k)) + '</span>' +
-      (k !== f ? '<button class="mtag link" data-act="oggi">' + esc(tag) + ' · vai a ' + esc(C.MESI[C.parseKey(f).m - 1]) + '</button>' : '<span class="mtag">' + esc(tag) + '</span>') + '</h1>' +
+      (tag ? '<span class="mtag">' + esc(tag) + '</span>' : '') + '</h1>' +
       '<button class="navbtn" data-act="next" aria-label="Mese successivo">' + ICON.right + '</button></div>';
   }
   function eurS(v) { v = C.r2(v); return Math.abs(v - Math.round(v)) < 0.005 ? eur0(v) : eur(v); }
@@ -651,7 +664,6 @@ span.ced { cursor: default; }
           '<span class="cmeta"><span class="okdot">' + ICON.check + '</span>' + eurS(spAmt) + ' spostati il ' + dayLabel(sp.data) + '</span></button>';
       }
       var lab = 'Da spostare';
-      if (sp) lab += ' · spostati ' + eurS(spAmt) + ' il ' + dayLabel(sp.data) + ' · ' + (manca > 0 ? 'mancano ' + eurS(manca) : eurS(-manca) + ' in più');
       return '<div class="card-front trade' + (ui.swap ? ' swap-in' : '') + '"><div class="ctop"><span class="cname">Trade Republic</span>' +
         '<span class="num cside" data-count="var" data-val="' + c.varie + '" data-fmt="s"' + (c.varie < 0 ? ' style="color:var(--bad-on-dark)"' : '') + '>' + eurS(c.varie) + '</span></div>' +
         '<div class="cbottom"><div class="cmain"><span class="clab">' + esc(lab) + '</span>' +
@@ -664,7 +676,7 @@ span.ced { cursor: default; }
           '<span class="cmeta num" data-count="amex" data-val="' + ax.val + '" data-fmt="amex">+' + eurS(ax.val) + '</span></button>';
       }
       return '<div class="card-front amex' + (ui.swap ? ' swap-in' : '') + '"><div class="ctop"><span class="cname">AMEX</span></div>' +
-        '<div class="cbottom"><div class="cmain"><span class="clab">Spendibile a ' + nomeK + ' · si paga a ' + nomeNx + '</span>' +
+        '<div class="cbottom"><div class="cmain">' +
         '<button class="t-copy' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="Modifica lo spendibile AMEX"><span class="cbig num" data-count="amex" data-val="' + ax.val + '" data-fmt="amex">+' + eurS(ax.val) + '</span></button></div></div></div>';
     };
     h += '<section class="stack" aria-label="Conti">' + (spDone ? trade(false) + amex(true) : amex(false) + trade(true)) + '</section>';
@@ -678,12 +690,13 @@ span.ced { cursor: default; }
       h += '<button class="nudge" data-act="redditonext"><span><b>Arrivato il cedolino di ' + nomeK + '?</b><small>Inseriscilo: decide quanto spostare a ' + nomeNx + '.</small></span>' + ICON.chev + '</button>';
     }
 
-    // ---- Credit Agricole: vincolo e avanzamento delle spese fisse
+    // ---- Credit Agricole: vincolo che scende man mano che spunti le spese fisse (ETF escluso)
+    var vinRes = c.daPagareF > 0.005 ? Math.max(0, C.r2(c.vincolo - c.pagF)) : 0;
     h += '<section class="ca' + (c.pctF >= 0.999 ? ' full' : '') + (ui.celebrate ? ' celebrate' : '') + '">' +
-      '<div class="ca-head"><span class="ca-lab"><i class="ca-dot"></i>Credit Agricole · vincolo</span><span class="ca-right"><span class="num ca-val" data-count="vin" data-val="' + c.vincolo + '" data-fmt="s">' + eurS(c.vincolo) + '</span>' +
+      '<div class="ca-head"><span class="ca-lab"><i class="ca-dot"></i>Credit Agricole · vincolo</span><span class="ca-right"><span class="num ca-val" data-count="vin" data-val="' + vinRes + '" data-fmt="s">' + eurS(vinRes) + '</span>' +
       '<button class="eye" data-act="privacy" aria-pressed="' + priv + '" aria-label="' + (priv ? 'Mostra gli importi' : 'Nascondi gli importi') + '">' + (priv ? ICON.eyeoff : ICON.eye) + '</button></span></div>' +
       '<div class="ca-bar"><span data-w="' + (c.pctF * 100).toFixed(1) + '" style="width:' + (ui.prev.bar !== undefined && !REDUCED ? ui.prev.bar : (REDUCED ? c.pctF * 100 : 0)).toFixed(1) + '%"></span></div>' +
-      '<span class="ca-sub">' + (c.daPagareF > 0.005 ? 'pagato ' + eurS(c.pagF) + ' · mancano ' + eurS(c.daPagareF) + ' di spese fisse' : (c.fisse > 0 ? 'spese fisse di ' + nomeK + ' tutte pagate' : 'nessuna spesa fissa')) + '</span></section>';
+      (function (t) { return t ? '<span class="ca-sub">' + t + '</span>' : ''; })(c.daPagareF > 0.005 && c.pagF > 0.005 ? 'su ' + eurS(c.vincolo) : '') + '</section>';
 
     // ---- Scadenze: timeline per giorno di addebito
     var past = k < cur;
@@ -711,8 +724,8 @@ span.ced { cursor: default; }
         '<button class="amt num" data-act="amt" data-id="' + esc(v.id) + '" aria-label="Modifica importo ' + esc(v.nome) + '">' + eur(r.a) + '</button>' +
         '<button class="check" data-act="toggle" data-id="' + esc(v.id) + '" aria-pressed="' + r.paid + '" aria-label="' + (r.paid ? 'Segna come non pagato: ' : 'Segna come pagato: ') + esc(v.nome) + '">' + ICON.check + '</button></li>';
     };
-    h += '<section class="pays"><header><h2>Scadenze</h2><span class="count">' + c.nFPag + ' di ' + c.nF + ' pagate</span></header><ul class="list tline">';
-    if (!todo.length) h += '<li class="alldone"><span class="alldone-dot">' + ICON.check + '</span>Tutto pagato per <span style="text-transform:capitalize">&nbsp;' + esc(nomeK) + '</span></li>';
+    h += '<section class="pays"><header><h2>Scadenze</h2><span class="count">' + c.nFPag + ' di ' + c.nF + ' pagate</span></header><ul class="list tline' + (todo.length ? '' : ' empty') + '">';
+    if (!todo.length) h += '<li class="alldone"><span class="alldone-dot">' + ICON.check + '</span>Tutto pagato</li>';
     todo.forEach(function (r) { h += rowHTML(r); });
     h += '</ul>';
     if (done.length || spDone) {
@@ -796,7 +809,7 @@ span.ced { cursor: default; }
   function investitoAt(k) {
     var st = db.settings || {}, rif = st.investitoRif || C.nowKey();
     if (k >= rif) return C.investito(db, k, true);
-    var tot = +st.investitoBase || 0, x = C.addM(k, 1), g = 0;
+    var tot = (+st.investitoBase || 0) + C.extraFino(db, k), x = C.addM(k, 1), g = 0;
     var iv = db.voci.filter(function (v) { return v.gruppo === 'investimento'; });
     while (x <= rif && g++ < 240) { iv.forEach(function (v) { tot -= C.amt(db, x, v); }); x = C.addM(x, 1); }
     return Math.max(0, C.r2(tot));
@@ -846,6 +859,21 @@ span.ced { cursor: default; }
       }, 's-etf');
   }
 
+  function sheetExtra(id) {
+    var arr = db.settings.extra || [], e = id ? arr.filter(function (x) { return x.id === id; })[0] : null;
+    openSheet('<h3>' + (e ? 'Investimento extra' : 'Nuovo investimento extra') + '</h3>' +
+      '<div class="field"><label for="s-ex">Importo</label><input class="input input-big" id="s-ex" inputmode="decimal" value="' + (e ? numStr(e.importo) : '') + '" placeholder="0" autocomplete="off"></div>' +
+      '<div class="field"><label for="s-exd">Data</label><input class="input" id="s-exd" type="date" value="' + (e ? e.data : todayISO()) + '"></div>' +
+      ERR + ACTIONS('Salva', e ? '<button type="button" class="btn btn-block btn-danger" data-act="delextra" data-id="' + esc(e.id) + '">Elimina</button>' : ''),
+      function () {
+        var n = parseNum(document.getElementById('s-ex').value), d = document.getElementById('s-exd').value || todayISO();
+        if (!isFinite(n) || n <= 0) return showErr('Scrivi l\'importo, per esempio 500.');
+        var list = db.settings.extra = (db.settings.extra || []).filter(function (x) { return !e || x.id !== e.id; });
+        list.push({ id: e ? e.id : 'x' + Date.now().toString(36), data: d, importo: C.r2(n) });
+        save(); closeSheet(); render(); toast(e ? 'Investimento aggiornato' : 'Investimento aggiunto');
+      }, e ? null : 's-ex');
+  }
+
   function stat(l, v, s) { return '<div class="stat"><span class="eyebrow">' + esc(l) + '</span><span class="num">' + eur0(v) + '</span>' + (s ? '<small>' + esc(s) + '</small>' : '') + '</div>'; }
 
   function viewImp() {
@@ -869,9 +897,16 @@ span.ced { cursor: default; }
         return '<div class="field"><label for="f-st-' + i + '">' + n.slice(0, 3) + '</label><input class="input num" id="f-st-' + i + '" inputmode="decimal" value="' + numStr(st[i]) + '" placeholder="' + numStr(s.redditoAtteso) + '" data-change="stima" data-i="' + i + '"></div>';
       }).join('') + '</div>' +
       '<p class="note">Il vincolo è sempre arrotondato per eccesso a 10 €.</p></section>';
-    h += '<section class="card"><header><h2>ETF</h2></header>' +
-      '<div class="field"><label for="f-inv">Già investito (fino a ' + esc(C.label(s.investitoRif || C.nowKey())) + ' incluso)</label><input class="input num" id="f-inv" inputmode="decimal" value="' + numStr(s.investitoBase || 0) + '" data-change="invbase"></div>' +
-      '<p class="note">Da qui in poi l\'app aggiunge ogni investimento che spunti. Se aggiorni il totale, vale fino al mese corrente incluso.</p></section>';
+    var ex = (s.extra || []).slice().sort(function (a, b) { return a.data < b.data ? 1 : -1; });
+    h += '<section class="card"><header><h2>Investimenti extra</h2><button class="btn btn-small btn-primary" data-act="newextra">Aggiungi</button></header>';
+    if (ex.length) {
+      h += '<ul class="list">';
+      ex.forEach(function (e) {
+        h += '<li><button class="setrow" data-act="editextra" data-id="' + esc(e.id) + '"><span class="row-main"><span class="name">' + dayLabel(e.data) + ' ' + e.data.slice(0, 4) + '</span></span><span class="num">' + eur(e.importo) + '</span>' + ICON.chev + '</button></li>';
+      });
+      h += '</ul>';
+    }
+    h += '<p class="note">Si sommano al totale ETF, insieme ai ' + eur0(s.investitoBase || 0) + ' iniziali e al piano mensile che spunti nelle spese.</p></section>';
 
     h += '<section class="card"><header><h2>Voci di spesa</h2><button class="btn btn-small btn-primary" data-act="newvoce">Nuova</button></header><ul class="list">';
     db.voci.forEach(function (v) {
@@ -885,13 +920,13 @@ span.ced { cursor: default; }
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 2.3</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 2.6</p>';
     return h;
   }
 
   function viewWelcome() {
     return '<div class="wrap welcome">' +
-      '<svg class="mark" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="29" fill="none" stroke="#D9DCE1" stroke-width="8"/><circle cx="36" cy="36" r="29" fill="none" stroke="#2E9461" stroke-width="8" stroke-linecap="round" stroke-dasharray="110 183" transform="rotate(-90 36 36)"/></svg>' +
+      '<svg class="mark" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="29" fill="none" stroke="#2A2D33" stroke-width="8"/><circle cx="36" cy="36" r="29" fill="none" stroke="#2E9461" stroke-width="8" stroke-linecap="round" stroke-dasharray="110 183" transform="rotate(-90 36 36)"/></svg>' +
       '<h2>Le tue finanze, mese per mese.</h2>' +
       '<p>Tieni d\'occhio le spese fisse, spunta quelle pagate e sappi subito quanto spostare da Credit Agricole a Trade.</p>' +
       '<div class="choices">' +
@@ -1128,6 +1163,9 @@ span.ced { cursor: default; }
     switch (a) {
       case 'page': goPage(+t.getAttribute('data-i'), true); break;
       case 'etfval': sheetEtf(); break;
+      case 'newextra': sheetExtra(null); break;
+      case 'editextra': sheetExtra(id); break;
+      case 'delextra': db.settings.extra = (db.settings.extra || []).filter(function (x) { return x.id !== id; }); save(); closeSheet(); render(); toast('Investimento eliminato'); break;
       case 'etfdel': {
         var hs = (db.settings.portafoglio || []).slice().sort(function (x, y) { return x.data < y.data ? -1 : 1; });
         hs.pop(); db.settings.portafoglio = hs; save(); closeSheet(); render(); toast('Ultimo valore eliminato'); break;
