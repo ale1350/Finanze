@@ -653,6 +653,7 @@ input[type="date"].input { min-height: 50px; -webkit-appearance: none; appearanc
     var k = ui.month, c = C.calc(db, k), m = C.getM(db, k), cur = C.nowKey();
     var prevNome = C.MESI[C.parseKey(C.addM(k, -1)).m - 1], nomeK = C.MESI[C.parseKey(k).m - 1], nomeNx = C.MESI[C.parseKey(C.addM(k, 1)).m - 1];
     var ax = C.amexDisponibile(db, k);
+    var axv = ax.manuale ? ax.val : C.r2(ax.base), axs = (axv < 0 ? '−' : '+') + eurS(Math.abs(axv)), axst = axv < 0 ? ' style="color:var(--bad-on-dark)"' : '';
     var sp = m.spostato || null, spAmt = sp ? (+sp.importo || 0) : 0, manca = sp ? C.r2(c.spostare - spAmt) : 0;
     var spDone = !!sp && Math.abs(manca) < 0.5;
     var h = '';
@@ -672,12 +673,12 @@ input[type="date"].input { min-height: 50px; -webkit-appearance: none; appearanc
     };
     var amex = function (front) {
       if (!front) {
-        return '<button class="card-back amex' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="AMEX, spendibile ' + eurS(ax.val) + '. Tocca per modificare"><span class="cname">AMEX</span>' +
-          '<span class="cmeta num" data-count="amex" data-val="' + ax.val + '" data-fmt="amex">+' + eurS(ax.val) + '</span></button>';
+        return '<button class="card-back amex' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="AMEX, ancora spendibile ' + axs + '. Tocca per inserire lo speso"><span class="cname">AMEX</span>' +
+          '<span class="cmeta num" data-count="amex" data-val="' + axv + '" data-fmt="amex"' + axst + '>' + axs + '</span></button>';
       }
       return '<div class="card-front amex' + (ui.swap ? ' swap-in' : '') + '"><div class="ctop"><span class="cname">AMEX</span></div>' +
         '<div class="cbottom"><div class="cmain">' +
-        '<button class="t-copy' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="Modifica lo spendibile AMEX"><span class="cbig num" data-count="amex" data-val="' + ax.val + '" data-fmt="amex">+' + eurS(ax.val) + '</span></button></div></div></div>';
+        '<button class="t-copy' + (ax.manuale ? ' manual' : '') + '" data-act="amex" aria-label="Inserisci lo speso con AMEX"><span class="cbig num" data-count="amex" data-val="' + axv + '" data-fmt="amex"' + axst + '>' + axs + '</span></button></div></div></div>';
     };
     h += '<section class="stack" aria-label="Conti">' + (spDone ? trade(false) + amex(true) : amex(false) + trade(true)) + '</section>';
     ui.swap = false;
@@ -920,7 +921,7 @@ input[type="date"].input { min-height: 50px; -webkit-appearance: none; appearanc
       '<label class="btn btn-block" for="f-file">Importa file Excel o backup</label><input type="file" id="f-file" class="vh" accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-change="file">' +
       '<button class="btn btn-block" data-act="paste">Incolla codice di backup</button>' +
       '<button class="btn btn-block btn-danger" data-act="wipe">Cancella tutti i dati</button></section>';
-    h += '<p class="note" style="text-align:center">Finanze · versione 2.6</p>';
+    h += '<p class="note" style="text-align:center">Finanze · versione 2.7</p>';
     return h;
   }
 
@@ -995,21 +996,28 @@ input[type="date"].input { min-height: 50px; -webkit-appearance: none; appearanc
       }, 's-red');
   }
 
+  /* AMEX: inserisci lo speso complessivo del mese; finisce nell'AMEX (t-1) del mese dopo
+     e abbassa quanto spostare su Trade quel mese. Nessun dato nuovo: è l'importo della voce carta del mese dopo. */
   function sheetAmex() {
-    var k = ui.month, ax = C.amexDisponibile(db, k), nxl = C.label(C.addM(k, 1));
-    openSheet('<h3>AMEX · <span style="text-transform:capitalize">' + esc(C.label(k)) + '</span></h3>' +
-      '<p class="note">Quanto puoi spendere con la carta questo mese: lo paghi a ' + esc(nxl) + '. È pari alle spese varie di ' + esc(nxl) + ' (' + eur(ax.base) + ')' + (ax.base < 0 ? ', che sono negative: quindi 0' : '') + '.</p>' +
-      '<div class="field"><label for="s-amex">Spendibile con AMEX</label><input class="input input-big" id="s-amex" inputmode="decimal" value="' + numStr(ax.val) + '" autocomplete="off"></div>' +
-      (ax.manuale ? '<p class="note">Valore inserito a mano. Calcolo automatico: ' + eur(ax.auto) + '.</p>' : '') +
-      ERR + ACTIONS('Salva', ax.manuale ? '<button type="button" class="btn btn-block" data-act="amexauto">Torna al calcolo automatico</button>' : ''),
+    var k = ui.month, nx = C.addM(k, 1), nomeK = C.MESI[C.parseKey(k).m - 1], nomeNx = C.MESI[C.parseKey(nx).m - 1];
+    var cv = db.voci.filter(function (v) { return v.gruppo === 'carta'; })[0];
+    if (!cv) return toast('Manca la voce AMEX nelle spese');
+    var cur = C.amt(db, nx, cv);
+    openSheet('<h3>Speso con AMEX a ' + esc(nomeK) + '</h3>' +
+      '<p class="note">Il totale finora. Lo paghi a ' + esc(nomeNx) + ': va in ' + esc(cv.nome) + ' e abbassa quanto sposti su Trade.</p>' +
+      '<div class="field"><label for="s-amex">Totale speso</label><input class="input input-big" id="s-amex" inputmode="decimal" value="' + numStr(cur) + '" autocomplete="off"></div>' +
+      ERR + ACTIONS('Salva', ''),
       function () {
         var n = parseNum(document.getElementById('s-amex').value);
-        if (!isFinite(n)) return showErr('Scrivi un importo, per esempio 650.');
-        if (n < 0) return showErr('Non può essere negativo: il minimo è 0.');
-        n = C.r2(n);
-        var mm = ensure(k);
-        if (Math.abs(n - ax.auto) < 0.005) delete mm.amexLimite; else mm.amexLimite = n;
-        save(); closeSheet(); render(); toast('AMEX aggiornato');
+        if (!isFinite(n) || n < 0) return showErr('Scrivi il totale, per esempio 250.');
+        var mn = ensure(nx), prev = mn.importi[cv.id], hadPrev = Object.prototype.hasOwnProperty.call(mn.importi, cv.id), m0 = ensure(k), lim = m0.amexLimite;
+        mn.importi[cv.id] = C.r2(n); delete m0.amexLimite;
+        save(); closeSheet(); render();
+        toast('Speso AMEX: ' + eurS(n), { label: 'Annulla', fn: function () {
+          if (hadPrev) mn.importi[cv.id] = prev; else delete mn.importi[cv.id];
+          if (lim != null) m0.amexLimite = lim;
+          save(); render();
+        } });
       }, 's-amex');
   }
 
@@ -1291,7 +1299,8 @@ input[type="date"].input { min-height: 50px; -webkit-appearance: none; appearanc
     if (f === 'f') return eur(v);
     var whole = Math.abs(target - Math.round(target)) < 0.005;
     var str = whole ? eur0(v) : eur(v);
-    return f === 'amex' ? '+' + str : str;
+    if (f === 'amex') return (target < 0 ? '−' : '+') + (whole ? eur0(Math.abs(v)) : eur(Math.abs(v)));
+    return str;
   }
   function animateIn() {
     var bar = $pgMese.querySelector('.ca-bar span');
