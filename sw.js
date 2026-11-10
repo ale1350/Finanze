@@ -1,5 +1,5 @@
 /* Finanze — service worker: app disponibile anche offline */
-const CACHE = 'finanze-v9';
+const CACHE = 'finanze-v10';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'xlsx.mini.min.js',
   'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => {
